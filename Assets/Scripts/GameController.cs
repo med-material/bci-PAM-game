@@ -7,96 +7,19 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 
 
-//For logging game events
-public struct GameEventData
-{
-    public NarrativeEvent narrativeEvent;
-    public FeedbackType feedbackType;
-    public BlockResult blockResult;
-    public int column;
-    public int lane;
-    public int winCounter;
-    public int lossCounter;
-    public int inputCounter;
-    public int blockCounter;
-    public int trialCounter;
-    public string fishType;
-    public bool BCIMode;
-}
-
-
-public enum FeedbackType
-{
-    Failure,
-    Success,
-    Sham,
-    AssistedSuccess,
-    AssistedFailure,
-    Rejected
-}
-
-public enum NarrativeEvent
-{
-    GameStart,
-    HookMoved,
-    FishHooked,
-    FishMissed,
-    InputAccepted,
-    Feedback,
-    NoInputAccepted,
-    NextTrialStarted,
-    BlockEnded,
-    GameEnd
-}
-
-public enum BlockResult
-{
-    Win,
-    Loss
-}
-
-
 public class GameController : MonoBehaviour
 {
-    //For logging game events
-    [Serializable]
-    public class GameEventChanged : UnityEvent<GameEventData> { }
-    public GameEventChanged onGameEventChanged;
-
-    [Serializable]
-    public class Feedback: UnityEvent<GameEventData> { }
-    public Feedback onFeedBack;
-
-    [Serializable]
-    public class NextTrialStarted : UnityEvent<GameEventData> { }
-    public NextTrialStarted onNextTrialStarted;
-
-    [Serializable]
-    public class EndOfBlock : UnityEvent<GameEventData> { }
-    public EndOfBlock onEndOfBlock;
-
-    public NarrativeEvent narrativeEvent;
-    public FeedbackType feedbackType;
-    public BlockResult blockResult;
-
-    public int inputCounter;
-    public int inputBlockCounter = 1;
     public int winCounter = 0;
-    public int lossCounter = 0;
-    public int trialCounter;
-    public string fishType;
 
     public LineBehaviour line;
     public HookBehaviour hook;
     public PlayerBehaviour player;
     public Basin basin;
-    public GameObject endscreen;
 
-    public InputBlocks inputBlocks;
+    //public InputBlocks inputBlocks;
     List<int> currentInputBlock;
 
     public GameManager gameManager;
-    public GameObject progressBar;
 
     public FishBehaviour currentFish;
     public GameObject fishRevealed;
@@ -105,13 +28,6 @@ public class GameController : MonoBehaviour
     public GameObject[] fish;
     int sprite;
     Vector3 spawnPoint;
-
-    public GameObject allCaughtUIBar;
-    public GameObject fishCaughtUI;
-    public GameObject fishCaughtUIRef;
-
-    public GameObject arrowKeys;
-    public GameObject keySequence;
 
     public Transform lake;
     float[] lanePos = new float[4];
@@ -125,14 +41,23 @@ public class GameController : MonoBehaviour
     bool sham;
     bool won;
     bool lost;
+    bool blockEnded;
+
+    //int numberOfSuccesses = 2;
+    //bool successBlock;
+    //bool lastBlock;
 
     public bool moving; //registers whether the feedback is still playing
+    
+    public GameUI ui;
+    //bool lastTrial;
+    //int blockCount;
+    //int blockIndex;
 
 
     // Start is called before the first frame update
     void Start()
     {
-        progressBar.SetActive(false);
         fishRevealed.SetActive(false);
 
         //Calculating lane- and column positions based on GameObject that is the height/width of the lake
@@ -161,6 +86,8 @@ public class GameController : MonoBehaviour
         {
             columnPos[i] = lakeLeft + i * columnWidth;
         }
+
+        ui.ShowProgressBar(false);
     }
 
     void Update()
@@ -179,116 +106,59 @@ public class GameController : MonoBehaviour
         }
     }
 
-    //For logging
-    public GameEventData CreateGameEventData()
+    public void onGameDecision(GameDecisionData gameDecision)
     {
-        GameEventData gameEvent = new GameEventData();
-        gameEvent.narrativeEvent = narrativeEvent;
-        gameEvent.feedbackType = feedbackType;
-        gameEvent.blockResult = blockResult;
-        gameEvent.winCounter = winCounter;
-        gameEvent.lossCounter = lossCounter;
-        gameEvent.inputCounter = inputCounter;
-        gameEvent.blockCounter = inputBlockCounter;
-        gameEvent.column = column;
-        gameEvent.lane = lane;
-        gameEvent.trialCounter = trialCounter;
-        gameEvent.fishType = fishType;
-        gameEvent.BCIMode = bciInput;
-        return gameEvent;
+        switch (gameDecision.decision)
+        {
+            case TrialType.RejInput:
+                NormalFailure();
+                
+                break;
+
+            case TrialType.AccInput:
+                NormalSuccess();
+                
+                break;
+
+            //Sham is ... complicated
+            case TrialType.ExplicitSham:
+                player.Sham(1);
+                sham = true;
+                
+                break;
+
+            case TrialType.AssistSuccess:
+                //The assisted success movement feedback doesn't trigger until partway into the animation
+                player.AssistedSuccess(1);
+                
+                break;
+
+            case TrialType.AssistFail:
+                AssistedFailure();
+                
+                break;
+        }
+        gameManager.PauseTrial();
     }
 
-    public void onInputWindowChanged(InputWindowState windowState)
-    {
-        //Triggering (hook/fish/line movement) feedback
-        if (windowState == InputWindowState.Closed && gameManager.inputAccepted)
-        {
-            narrativeEvent = NarrativeEvent.Feedback;
-            switch (currentInputBlock.First())
-            {
-                case 0:
-                    NormalFailure();
-
-                    feedbackType = FeedbackType.Failure;
-                    break;
-
-                case 1:
-                    NormalSuccess();
-
-                    feedbackType = FeedbackType.Success;
-                    break;
-
-                //Sham is ... complicated
-                case 2:
-                    player.Sham(1);
-                    sham = true;
-
-                    feedbackType = FeedbackType.Sham;
-                    break;
-
-                case 3:
-                    //The assisted success movement feedback doesn't trigger until partway into the animation
-                    player.AssistedSuccess(1);
-
-                    feedbackType = FeedbackType.AssistedSuccess;
-                    break;
-
-                case 4:
-                    AssistedFailure();
-
-                    feedbackType = FeedbackType.AssistedFailure;
-                    break;
-            }
-            GameEventData gameEvent = CreateGameEventData();
-            onFeedBack.Invoke(gameEvent);
-
-            gameManager.PauseTrial();
-
-            inputCounter++;
-            trialCounter++;
-
-            //If there are more inputs, remove the first(current)
-            if (currentInputBlock.Count > 0)
-            {
-                currentInputBlock.Remove(currentInputBlock.First());
-            }
-        }
-
-        //If the window closes and no input has been accepted, log it but otherwise do nothing
-        else if (windowState == InputWindowState.Closed && !gameManager.inputAccepted)
-        {
-            narrativeEvent = NarrativeEvent.NoInputAccepted;
-            feedbackType = FeedbackType.Rejected;
-            GameEventData gameEvent = CreateGameEventData();
-            onFeedBack.Invoke(gameEvent);
-
-            trialCounter++;
-        }
-        //If the window starts again, the next trial has started
-        //(2 seconds earlier)
-        //(this was mostly just to make the logging more coherent)
-        else if(windowState == InputWindowState.Open)
-        {
-            narrativeEvent = NarrativeEvent.NextTrialStarted;
-            GameEventData gameEvent = CreateGameEventData();
-            onNextTrialStarted.Invoke(gameEvent);
-        }
-    }
+    //public void onNewBlock(BlockData blockData)
+    //{
+    //    blockCount = blockData.blockCount;
+    //    blockIndex = blockData.blockIndex;
+    //    numberOfSuccesses = blockData.numberOfSuccesses;
+    //    successBlock = blockData.successBlock;
+    //    lastBlock = blockData.lastBlock;
+    //}
 
     //Called when the fish is hooked
     public void BCIInputStart()
     {
-        narrativeEvent = NarrativeEvent.FishHooked;
-        GameEventData gameEvent = CreateGameEventData();
-        onGameEventChanged.Invoke(gameEvent);
         
         bciInput = true;
-
-        arrowKeys.SetActive(false);
-        keySequence.SetActive(true);
-        progressBar.SetActive(true);
-
-        gameManager.failure = FailureInput(currentInputBlock.First()); //Register whether first input is a success
+        
+        ui.ShowProgressBar(true);
+        ui.BCIInput(true);
+        
 
         gameManager.ResetTrial();
         gameManager.ResumeTrial();
@@ -315,10 +185,7 @@ public class GameController : MonoBehaviour
         lane--;
         hook.Move(new Vector3(columnPos[column], lanePos[lane]), false, 1);
         player.ReelIn();
-
-        narrativeEvent = NarrativeEvent.HookMoved;
-        GameEventData gameEvent = CreateGameEventData();
-        onGameEventChanged.Invoke(gameEvent);
+        
     }
 
     void ArrowKeyDown()
@@ -332,10 +199,7 @@ public class GameController : MonoBehaviour
         lane++;
         hook.Move(new Vector3(columnPos[column], lanePos[lane]), false, 1);
         player.ReelOut();
-
-        narrativeEvent = NarrativeEvent.HookMoved;
-        GameEventData gameEvent = CreateGameEventData();
-        onGameEventChanged.Invoke(gameEvent);
+        
     }
 
     void NormalSuccess()
@@ -408,6 +272,8 @@ public class GameController : MonoBehaviour
 
     public void FeedbackFinished()
     {
+
+        blockEnded = false;
         //Sham has extra feedback that plays after the movement feedback finishes
         if (sham)
         {
@@ -420,22 +286,32 @@ public class GameController : MonoBehaviour
 
             player.Idle();
 
+            if (lane < 2)
+            {
+                gameManager.assistSuccessPossible = false;
+            }
+            else
+            {
+                gameManager.assistSuccessPossible = true;
+            }
+
+
             //If we're still in the middle of a block, start next trial
             if (bciInput && !won && !lost)
             {
                 gameManager.ResumeTrial();
                 currentFish.StopStruggle();
-
-                gameManager.failure = FailureInput(currentInputBlock.First());
             }
             //If we're at the end of the block and the user has won
             else if (won)
             {
+                blockEnded = true;
                 Invoke("FishCaught", 0.2f); //Wait just a lil bit to make it more natural
             }
             //If we're at the end of the block and the user has lost
             else if (lost)
             {
+                blockEnded = true;
                 FishLost();
             }
         }
@@ -443,15 +319,8 @@ public class GameController : MonoBehaviour
 
     public void FishCaught()
     {
-        narrativeEvent = NarrativeEvent.BlockEnded;
-        blockResult = BlockResult.Win;
         winCounter++;
-        fishType = fishSprites[sprite].ToString().Replace(" (UnityEngine.Sprite)",string.Empty);
-        GameEventData gameEvent = CreateGameEventData();
-        onEndOfBlock.Invoke(gameEvent);
-
-        progressBar.SetActive(false);
-        keySequence.SetActive(false);
+        
 
         player.Win();
 
@@ -464,14 +333,6 @@ public class GameController : MonoBehaviour
 
     void FishLost()
     {
-        narrativeEvent = NarrativeEvent.BlockEnded;
-        blockResult = BlockResult.Loss;
-        lossCounter++;
-        GameEventData gameEvent = CreateGameEventData();
-        onEndOfBlock.Invoke(gameEvent);
-
-        progressBar.SetActive(false);
-        keySequence.SetActive(false);
 
         player.Lose();
 
@@ -486,14 +347,14 @@ public class GameController : MonoBehaviour
 
     void Restart()
     {
-        inputBlocks.RemoveBait();
+        ui.ShowProgressBar(false);
+        ui.BCIInput(false);
+        //ui.RemoveBait(blockIndex);
 
         if (won)
         {
-            GameObject caughtFish = Instantiate(fishCaughtUI,
-                new Vector3(fishCaughtUIRef.transform.position.x - Screen.width / 12 * (winCounter - 1), allCaughtUIBar.transform.position.y),
-                Quaternion.identity, allCaughtUIBar.transform);
-            caughtFish.GetComponent<Image>().sprite = fishSprites[sprite];
+
+            ui.AddFish(fishSprites[sprite], winCounter);
 
             basin.Splash();
             won = false;
@@ -512,61 +373,64 @@ public class GameController : MonoBehaviour
 
         player.Idle();
 
-        currentInputBlock = inputBlocks.NextBlock();
-        inputBlockCounter++;
+        if (blockEnded)
+        {
+            gameManager.canEndGame = true;
+        }
 
-        if (currentInputBlock == null)
+        SpawnFish();
+    }
+
+    public void onGameStateChanged(GameData gameData)
+    {
+        if(gameData.gameState == GameState.Stopped)
         {
             gameEnded = true;
             Invoke("EndGame", 1);
-        }
-        else
-        {
-            Invoke("SpawnFish", 0.1f);
-            arrowKeys.SetActive(true);
         }
     }
 
     public void SpawnFish()
     {
-        int size = inputBlocks.NumberOfSuccesses(currentInputBlock) - 1;
-        int leftToRight = UnityEngine.Random.Range(0, 2);
-
-        if (leftToRight == 0)
+        if (!gameEnded)
         {
-            spawnPoint.x = -lake.transform.localScale.x;
+            gameManager.canEndGame = false;
+            int size = UnityEngine.Random.Range(0, 3);
+
+            int leftToRight = UnityEngine.Random.Range(0, 2);
+
+            if (leftToRight == 0)
+            {
+                spawnPoint.x = -lake.transform.localScale.x;
+            }
+            else
+                spawnPoint.x = lake.transform.localScale.x;
+
+            spawnPoint.y = lanePos[size + 1] - fish[size].transform.localScale.y / 3;
+            spawnPoint.z = hook.transform.position.z - 0.1f;
+
+            currentFish = Instantiate(fish[size], spawnPoint, Quaternion.identity).GetComponent<FishBehaviour>();
+
+            sprite = UnityEngine.Random.Range(size * 3, size * 3 + 3);
+            fishRevealed.GetComponent<SpriteRenderer>().sprite = fishSprites[sprite];
         }
         else
-            spawnPoint.x = lake.transform.localScale.x;
-
-        spawnPoint.y = lanePos[size + 1] - fish[size].transform.localScale.y / 3;
-        spawnPoint.z = hook.transform.position.z - 0.1f;
-
-        currentFish = Instantiate(fish[size], spawnPoint, Quaternion.identity).GetComponent<FishBehaviour>();
-
-        sprite = UnityEngine.Random.Range(size * 3, size * 3 + 3);
-        fishRevealed.GetComponent<SpriteRenderer>().sprite = fishSprites[sprite];
+            Debug.Log("nope");
     }
 
     void StartGame()
     {
         gameManager.RunGame();
         gameManager.PauseTrial();
-
-        currentInputBlock = inputBlocks.NextBlock();
+        //ui.CreateBaitCounter(blockCount);
 
         SpawnFish();
         gameStarted = true;
-
-        inputBlockCounter = 1;
-        inputCounter = 1;
-        trialCounter = 1;
     }
 
     void EndGame()
     {
-        allCaughtUIBar.SetActive(false);
-        gameManager.EndGame();
-        endscreen.GetComponent<Animator>().enabled = true;
+        ui.DisableUI();
+        //gameManager.EndGame();
     }
 }

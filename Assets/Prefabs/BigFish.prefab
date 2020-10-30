@@ -102,6 +102,20 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 2651bc848c32fee46b831116cf13997e, type: 3}
   - {fileID: 8300000, guid: 9da3e8ef53a0ba94599c79f8c002a240, type: 3}
   - {fileID: 8300000, guid: b6ce67c961d8cf44e8a7a23b0cfe036d, type: 3}
+  onFishEvent:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_MethodName: 
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!50 &6795863235221930943
 Rigidbody2D:
   serializedVersion: 4

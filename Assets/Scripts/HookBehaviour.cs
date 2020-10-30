@@ -1,9 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
+using System.Collections;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class HookBehaviour : MonoBehaviour
 {
+
     public GameController gc;
 
     public void Move(Vector3 targetPos, bool xAxis, float speed)
