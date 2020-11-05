@@ -4,11 +4,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-public enum FishEvent
-{
-    OnHook,
-    Escaped,
-}
 
 public class FishBehaviour : MonoBehaviour
 {
@@ -24,10 +19,6 @@ public class FishBehaviour : MonoBehaviour
 
     GameController gc;
     bool logged = false;
-
-    [Serializable]
-    public class OnFishEvent : UnityEvent<FishEvent> { }
-    public OnFishEvent onFishEvent;
 
     
     // Start is called before the first frame update
@@ -59,7 +50,6 @@ public class FishBehaviour : MonoBehaviour
         if((leftToRight && transform.position.x > exitPoint.x - 0.1) || (!leftToRight && transform.position.x < exitPoint.x + 0.1))
         {
             gc.SpawnFish();
-            onFishEvent.Invoke(FishEvent.Escaped);
             Goodbye();
         }
     }
@@ -107,8 +97,7 @@ public class FishBehaviour : MonoBehaviour
 
             PlaySound(2, 1);
             StopSwimming();
-
-            onFishEvent.Invoke(FishEvent.OnHook);
+            
             gc.BCIInputStart();
         }
     }

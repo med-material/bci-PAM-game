@@ -17,7 +17,7 @@ public class GameController : MonoBehaviour
     public Basin basin;
 
     //public InputBlocks inputBlocks;
-    List<int> currentInputBlock;
+    //List<int> currentInputBlock;
 
     public GameManager gameManager;
 
@@ -41,7 +41,7 @@ public class GameController : MonoBehaviour
     bool sham;
     bool won;
     bool lost;
-    bool blockEnded;
+    //bool blockEnded;
 
     //int numberOfSuccesses = 2;
     //bool successBlock;
@@ -159,8 +159,6 @@ public class GameController : MonoBehaviour
         ui.ShowProgressBar(true);
         ui.BCIInput(true);
         
-
-        gameManager.ResetTrial();
         gameManager.ResumeTrial();
     }
 
@@ -211,6 +209,7 @@ public class GameController : MonoBehaviour
         {
             column = 3;
             won = true;
+            gameManager.canEndGame = true;
         }
         hook.Move(new Vector3(columnPos[column], lanePos[lane]), false, 1);
     }
@@ -233,6 +232,7 @@ public class GameController : MonoBehaviour
         if (column == 0 || column == 6)
         {
             lost = true;
+            gameManager.canEndGame = true;
         }
 
         hook.Move(new Vector3(columnPos[column], lanePos[lane]), true, 0.8f);
@@ -272,8 +272,7 @@ public class GameController : MonoBehaviour
 
     public void FeedbackFinished()
     {
-
-        blockEnded = false;
+        
         //Sham has extra feedback that plays after the movement feedback finishes
         if (sham)
         {
@@ -305,13 +304,11 @@ public class GameController : MonoBehaviour
             //If we're at the end of the block and the user has won
             else if (won)
             {
-                blockEnded = true;
                 Invoke("FishCaught", 0.2f); //Wait just a lil bit to make it more natural
             }
             //If we're at the end of the block and the user has lost
             else if (lost)
             {
-                blockEnded = true;
                 FishLost();
             }
         }
@@ -367,16 +364,12 @@ public class GameController : MonoBehaviour
         }
 
         fishRevealed.SetActive(false);
+        
         gameManager.ResetTrial();
 
         bciInput = false;
 
         player.Idle();
-
-        if (blockEnded)
-        {
-            gameManager.canEndGame = true;
-        }
 
         SpawnFish();
     }
@@ -415,7 +408,7 @@ public class GameController : MonoBehaviour
             fishRevealed.GetComponent<SpriteRenderer>().sprite = fishSprites[sprite];
         }
         else
-            Debug.Log("nope");
+            Debug.Log("No more trials, ending game.");
     }
 
     void StartGame()

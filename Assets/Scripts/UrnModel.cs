@@ -41,6 +41,25 @@ public class UrnModel : MonoBehaviour
         entryTypes.Add(entryType.name, entryType);
     }
 
+    public void AddRandomEntry()
+    {
+        int random = Random.Range(0, 1);
+        string randomEntry;
+
+        if(random == 0)
+        {
+            randomEntry = "RejInput";
+        }
+        else
+        {
+            randomEntry = "AccInput";
+        }
+        designedOrder.Add(randomEntry);
+        resultedOrder.Add("None");
+
+        Debug.Log("Added new trial: " + randomEntry);
+    }
+
     public int GetIndex() {
         return index;
     }
@@ -53,6 +72,7 @@ public class UrnModel : MonoBehaviour
     }
 
     public void SetEntryResult(string result) {
+        Debug.Log(resultedOrder.Count);
         resultedOrder[index] = result;
 
         if (result == designedOrder[index]) {

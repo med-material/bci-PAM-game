@@ -294,6 +294,8 @@ public class GameManager : MonoBehaviour
                     onInputWindowChanged.Invoke(inputWindow);
                     LogEvent("InputWindowChange");
                 }
+
+                // Removed for PAM
                 //else if (interTrialTimer > interTrialIntervalSeconds)
                 //{
                 //    EndGame();
@@ -324,11 +326,6 @@ public class GameManager : MonoBehaviour
                     alarmFired = false;
                 }
             }
-        }
-        if (currentTrial >= trialsTotal && canEndGame)
-        {
-            canEndGame = false;
-            EndGame();
         }
         
         GameTimers gameTimers = new GameTimers();
@@ -440,6 +437,17 @@ public class GameManager : MonoBehaviour
         ////Debug.Log("Decision: " + System.Enum.GetName(typeof(InputTypes), currentInputDecision));
         //UpdateDesignedInputOrder();
         inputIndex++;
+
+        //Added for PAM
+        if (currentTrial >= trialsTotal)
+        {
+            if (!canEndGame)
+            {
+                trialsTotal++;
+                urn.AddRandomEntry();
+                Debug.Log("Trials at " + trialsTotal);
+            }
+        }
     }
 
     public void MakeInputDecision(InputData inputData = null, bool windowExpired = false)
@@ -521,6 +529,15 @@ public class GameManager : MonoBehaviour
         inputWindowTimer = 0f;
         interTrialTimer = 0.001f;
         inputWindow = InputWindowState.Closed;
+
+        //Added for PAM
+        if (currentTrial >= trialsTotal)
+        {
+            if (canEndGame)
+            {
+                EndGame();
+            }
+        }
     }
 
     public void ResumeTrial()
