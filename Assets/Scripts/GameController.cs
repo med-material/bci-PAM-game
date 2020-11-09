@@ -55,6 +55,11 @@ public class GameController : MonoBehaviour
     //int blockIndex;
 
 
+    [Serializable]
+    public class OnFishEvent : UnityEvent<string> { }
+    public OnFishEvent onFishEvent;
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -200,6 +205,11 @@ public class GameController : MonoBehaviour
         
     }
 
+    public void FishEscaped()
+    {
+        onFishEvent.Invoke("FishEscaped");
+    }
+
     void NormalSuccess()
     {
         player.NormalSuccess();
@@ -304,11 +314,13 @@ public class GameController : MonoBehaviour
             //If we're at the end of the block and the user has won
             else if (won)
             {
+                onFishEvent.Invoke("FishCaught");
                 Invoke("FishCaught", 0.2f); //Wait just a lil bit to make it more natural
             }
             //If we're at the end of the block and the user has lost
             else if (lost)
             {
+                onFishEvent.Invoke("FishLost");
                 FishLost();
             }
         }

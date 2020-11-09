@@ -75,11 +75,13 @@ public class FishBehaviour : MonoBehaviour
                 timeToMove = 7;
                 anim.speed = 2;
 
+
                 if (!logged)
                 {
-                    //gc.narrativeEvent = NarrativeEvent.FishMissed;
-                    //GameEventData gameEvent = gc.CreateGameEventData();
-                    //gc.onGameEventChanged.Invoke(gameEvent);
+                    //    //gc.narrativeEvent = NarrativeEvent.FishMissed;
+                    //    //GameEventData gameEvent = gc.CreateGameEventData();
+                    //    //gc.onGameEventChanged.Invoke(gameEvent);
+                    gc.FishEscaped();
                     logged = true;
                 }
             }

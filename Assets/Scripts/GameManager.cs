@@ -147,6 +147,8 @@ public class GameManager : MonoBehaviour
     public bool assistSuccessPossible;
     public bool canEndGame;
 
+    string fish;
+
     void Start()
     {
         loggingManager = GameObject.Find("LoggingManager").GetComponent<LoggingManager>();
@@ -271,10 +273,27 @@ public class GameManager : MonoBehaviour
         }
         else
         {
+            gameLog["TrialGoal"] = "NA";
             gameLog["TrialResult"] = "NA";
         }
 
+        if (eventLabel == "FishEvent")
+        {
+            gameLog["FishEvent"] = fish;
+        }
+        else
+        {
+            gameLog["FishEvent"] = "NA";
+        }
+
+
         loggingManager.Log("Game", gameLog);
+    }
+
+    public void onFishEvent(string fishEvent)
+    {
+        fish = fishEvent;
+        LogEvent("FishEvent");
     }
 
     // Update is called once per frame
@@ -372,7 +391,7 @@ public class GameManager : MonoBehaviour
         onGameStateChanged.Invoke(gameData);
         LogEvent("GameStopped");
         loggingManager.SaveLog("Game");
-        //loggingManager.SaveLog("Sample");
+        loggingManager.SaveLog("Sample");
         loggingManager.SaveLog("Meta");
         loggingManager.ClearAllLogs();
     }
