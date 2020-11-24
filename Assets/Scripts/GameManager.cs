@@ -144,9 +144,9 @@ public class GameManager : MonoBehaviour
     private LoggingManager loggingManager;
     private UrnModel urn;
 
+    // Added for PAM
     public bool assistSuccessPossible;
-    public bool canEndGame;
-
+    public bool gameOver;
     string fish;
 
     void Start()
@@ -238,6 +238,9 @@ public class GameManager : MonoBehaviour
             {"FabInputTrials", fabTrials},
             {"AccInputTrials", accTrials},
             {"RejInputTrials", rejTrials},
+            {"ExplicitShamTrials", explicitShamTrials},
+            {"AssistSuccessTrials", assistSuccessTrials},
+            {"AssistFailTrials", assistFailTrials},
             {"Trials", trialsTotal},
             {"InterTrialInterval_sec", interTrialIntervalSeconds},
             {"InputWindow_sec", inputWindowSeconds},
@@ -277,6 +280,7 @@ public class GameManager : MonoBehaviour
             gameLog["TrialResult"] = "NA";
         }
 
+        // Added for PAM
         if (eventLabel == "FishEvent")
         {
             gameLog["FishEvent"] = fish;
@@ -346,7 +350,7 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
-        
+
         GameTimers gameTimers = new GameTimers();
         gameTimers.interTrialTimer = interTrialTimer;
         gameTimers.inputWindowTimer = inputWindowTimer;
@@ -460,12 +464,7 @@ public class GameManager : MonoBehaviour
         //Added for PAM
         if (currentTrial >= trialsTotal)
         {
-            if (!canEndGame)
-            {
-                trialsTotal++;
-                urn.AddRandomEntry();
-                Debug.Log("Trials at " + trialsTotal);
-            }
+            gameOver = true;
         }
     }
 
@@ -530,7 +529,7 @@ public class GameManager : MonoBehaviour
         }
         else if (windowExpired)
         {
-            if(trialGoal == TrialType.AssistFail)
+            if (trialGoal == TrialType.AssistFail)
             {
                 trialResult = TrialType.AssistFail;
             }
@@ -548,15 +547,6 @@ public class GameManager : MonoBehaviour
         inputWindowTimer = 0f;
         interTrialTimer = 0.001f;
         inputWindow = InputWindowState.Closed;
-
-        //Added for PAM
-        if (currentTrial >= trialsTotal)
-        {
-            if (canEndGame)
-            {
-                EndGame();
-            }
-        }
     }
 
     public void ResumeTrial()

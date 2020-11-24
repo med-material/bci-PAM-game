@@ -5,25 +5,7 @@ using UnityEngine;
 
 public class InputBlocks : MonoBehaviour
 {
-    List<TrialType> currentInputBlock;
-
-    public List <TrialType> CreateInputBlock(List <TrialType> designedInputOrder)
-    {
-        if(designedInputOrder.Count < 6)
-        {
-            currentInputBlock = designedInputOrder;
-        }
-        else
-        {
-            int blockLength = Random.Range(2, 6);
-
-        }
-
-        return currentInputBlock;
-    }
-
-
-
+    //List<InputTypes> currentInputBlock;
 
     //    int[,] orderOfBlocks = new int[4, 6]{ { 1, 2, 3, 4, 5, 6 },
     //                                          { 5, 4, 3, 2, 6, 1 },

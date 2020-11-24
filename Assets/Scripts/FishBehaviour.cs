@@ -18,9 +18,10 @@ public class FishBehaviour : MonoBehaviour
     Vector3 exitPoint;
 
     GameController gc;
-    bool logged = false;
+    public bool escaped = false;
+    bool onHook;
 
-    
+
     // Start is called before the first frame update
     void Start()
     {
@@ -41,52 +42,43 @@ public class FishBehaviour : MonoBehaviour
             gameObject.transform.localScale = new Vector3(-gameObject.transform.localScale.x, gameObject.transform.localScale.y);
         }
 
-        StartSwimming(startPos, exitPoint, 15);
+        StartSwimming(startPos, exitPoint, 0.8f);
     }
 
     void Update()
     {
-        //If player didn't manage to hook the fish and it has swum (?) off screen, spawn a new one and destroy this one
-        if((leftToRight && transform.position.x > exitPoint.x - 0.1) || (!leftToRight && transform.position.x < exitPoint.x + 0.1))
+        if (((leftToRight && transform.position.x > 0) || (!leftToRight && transform.position.x < 0))
+            && !escaped && !onHook)
         {
-            gc.SpawnFish();
-            Goodbye();
+            StopSwimming();
+            Escape();
         }
     }
 
-    public void StartSwimming(Vector3 startPos, Vector3 targetPos, float timeToMove)
+    public void StartSwimming(Vector3 startPos, Vector3 targetPos, float speed)
     {
-        swim = StartCoroutine(Swim(startPos, targetPos, timeToMove));
+        swim = StartCoroutine(Swim(startPos, targetPos, speed));
     }
 
-    private IEnumerator Swim(Vector3 startPos, Vector3 targetPos, float timeToMove)
+    private IEnumerator Swim(Vector3 startPos, Vector3 targetPos, float speed)
     {
         anim.Play("Swimming");
         float t = 0;
 
-        while(t < 1)
+        float timeToMove = Mathf.Abs(startPos.x - targetPos.x) / 2;
+
+        while (t < 1)
         {
-            t += Time.deltaTime / timeToMove;
+            t += (Time.deltaTime / timeToMove) * speed;
             transform.position = Vector3.Lerp(startPos, targetPos, t);
 
-            //If player hasn't managed to hook the fish (i.e. it has passed the position of the hook), speed it up
-            if((leftToRight && transform.position.x > 0) || (!leftToRight && transform.position.x < 0))
-            {
-                timeToMove = 7;
-                anim.speed = 2;
-
-
-                if (!logged)
-                {
-                    //    //gc.narrativeEvent = NarrativeEvent.FishMissed;
-                    //    //GameEventData gameEvent = gc.CreateGameEventData();
-                    //    //gc.onGameEventChanged.Invoke(gameEvent);
-                    gc.FishEscaped();
-                    logged = true;
-                }
-            }
-
             yield return null;
+        }
+
+        if (escaped && !onHook)
+        {
+            gc.SpawnFish();
+            Goodbye();
         }
     }
 
@@ -98,15 +90,16 @@ public class FishBehaviour : MonoBehaviour
             transform.SetParent(other.GetComponent<Transform>());
 
             PlaySound(2, 1);
+            anim.Play("Struggle");
             StopSwimming();
-            
+            onHook = true;
+
             gc.BCIInputStart();
         }
     }
 
     void StopSwimming()
     {
-        anim.Play("Struggle");
         StopCoroutine(swim);
     }
 
@@ -132,10 +125,21 @@ public class FishBehaviour : MonoBehaviour
     //When the fish is lost, mirror around the x-axis, then swim away
     public void Escape()
     {
+        escaped = true;
         anim.Play("Swimming");
+        anim.speed = 2;
 
-        gameObject.transform.localScale = new Vector3(-gameObject.transform.localScale.x, gameObject.transform.localScale.y);
-        StartSwimming(transform.position, new Vector3(startPos.x, transform.position.y), 2);
+        if (onHook)
+        {
+            gameObject.transform.localScale = new Vector3(-gameObject.transform.localScale.x, gameObject.transform.localScale.y);
+            StartSwimming(transform.position, new Vector3(startPos.x, transform.position.y), 2);
+            transform.SetParent(null);
+        }
+        else
+        {
+            StartSwimming(transform.position, new Vector3(exitPoint.x, transform.position.y), 2);
+            gc.FishEscaped();
+        }
     }
 
     public void Goodbye()

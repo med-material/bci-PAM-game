@@ -10,6 +10,7 @@ public class GameUI : MonoBehaviour
     List<GameObject> baitsLeft = new List<GameObject>();
     
     public GameObject allCaughtUIBar;
+    public GameObject allCaughtUIBar2;
     public GameObject fishCaughtUI;
     public GameObject fishCaughtUIRef;
 
@@ -69,9 +70,24 @@ public class GameUI : MonoBehaviour
 
     public void AddFish(Sprite fishSprite, int winCounter)
     {
-        GameObject caughtFish = Instantiate(fishCaughtUI,
-            new Vector3(fishCaughtUIRef.transform.position.x - Screen.width / 12 * (winCounter - 1), allCaughtUIBar.transform.position.y),
-            Quaternion.identity, allCaughtUIBar.transform);
+        GameObject caughtFish;
+        if (winCounter < 6)
+        {
+            caughtFish = Instantiate(fishCaughtUI,
+                new Vector3(fishCaughtUIRef.transform.position.x - Screen.width / 13 * (winCounter - 1), allCaughtUIBar.transform.position.y),
+                Quaternion.identity, allCaughtUIBar.transform);
+        }
+        else
+        {
+            if(winCounter == 6)
+            {
+                allCaughtUIBar2.SetActive(true);
+            }
+            caughtFish = Instantiate(fishCaughtUI,
+                new Vector3(fishCaughtUIRef.transform.position.x - Screen.width / 13 * (winCounter - 6), allCaughtUIBar2.transform.position.y),
+                Quaternion.identity, allCaughtUIBar2.transform);
+        }
+
         caughtFish.GetComponent<Image>().sprite = fishSprite;
     }
 
