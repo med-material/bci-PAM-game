@@ -483,11 +483,11 @@ public class GameManager : MonoBehaviour
                     trialResult = TrialType.FabInput;
                     CloseInputWindow();
                 }
-                else if (trialGoal == TrialType.ExplicitSham)
-                {
-                    trialResult = TrialType.ExplicitSham;
-                    CloseInputWindow();
-                }
+                //else if (trialGoal == TrialType.ExplicitSham)
+                //{
+                //    trialResult = TrialType.ExplicitSham;
+                //    CloseInputWindow();
+                //}
             }
             else if (trialGoal == TrialType.AccInput)
             {
@@ -532,6 +532,10 @@ public class GameManager : MonoBehaviour
             if (trialGoal == TrialType.AssistFail)
             {
                 trialResult = TrialType.AssistFail;
+            }
+            else if (trialGoal == TrialType.ExplicitSham)
+            {
+                trialResult = TrialType.ExplicitSham;
             }
             CloseInputWindow();
         }

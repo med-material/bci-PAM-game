@@ -323,15 +323,8 @@ public class GameController : MonoBehaviour
 
     void Restart()
     {
-        if (gameManager.gameOver)
-        {
-            Invoke("EndGame", 1);
-            Debug.Log("No more trials, ending game.");
-        }
-        else
-        {
-            ui.BCIInput(false);
-        }
+            
+        ui.BCIInput(false);
 
         if (won)
         {
@@ -356,6 +349,12 @@ public class GameController : MonoBehaviour
         bciInput = false;
 
         player.Idle();
+
+        if (gameManager.gameOver)
+        {
+            Invoke("EndGame", 1);
+            Debug.Log("No more trials, ending game.");
+        }
 
     }
 

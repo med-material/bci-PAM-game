@@ -21,7 +21,8 @@ using System.Text;
 //    public string packet;
 //}
 
-public enum MotorImageryEvent {
+public enum MotorImageryEvent
+{
     MotorImagery,
     Rest,
 }
@@ -41,8 +42,8 @@ public class StateObject
 public class OpenBCIInput : MonoBehaviour
 {
 
-	private TcpClient mySocket; 
-  	private NetworkStream theStream;
+    private TcpClient mySocket;
+    private NetworkStream theStream;
     private StreamWriter theWriter;
     private StreamReader theReader;
     public string Host = "localhost";
@@ -54,7 +55,7 @@ public class OpenBCIInput : MonoBehaviour
     private int[] consecThresholdBuffer;
     private float[] consecThresholdBufferVal;
     private int consecThresholdIndex = 0;
-    public int  consecutiveBufferSize = 8;
+    public int consecutiveBufferSize = 8;
 
 
     private int testSampleChannelSize;
@@ -66,14 +67,16 @@ public class OpenBCIInput : MonoBehaviour
 
     private RawOpenVibeSignal lastSignal;
 
-    public class RawOpenVibeSignal {
+    public class RawOpenVibeSignal
+    {
 
         public int channels;
         public int samples;
         public double[,] signalMatrix;
     }
 
-    public enum BCIState {
+    public enum BCIState
+    {
         Disconnected,
         Connecting,
         ReceivingHeader,
@@ -84,7 +87,8 @@ public class OpenBCIInput : MonoBehaviour
     public string motorImageryEvent;
     private int inputNumber = 0;
 
-    public enum BCIProcessingMode {
+    public enum BCIProcessingMode
+    {
         SingleThreshold,
         ConsecutiveThreshold,
     }
@@ -117,7 +121,8 @@ public class OpenBCIInput : MonoBehaviour
 
     void Start()
     {
-        if (instance == null) {
+        if (instance == null)
+        {
             instance = this;
         }
         DontDestroyOnLoad(this);
@@ -131,7 +136,8 @@ public class OpenBCIInput : MonoBehaviour
         inputNumber = 0;
     }
 
-    private void LogMeta() {
+    private void LogMeta()
+    {
         Dictionary<string, object> metaLog = new Dictionary<string, object>() {
             {"ConfidenceThreshold", classificationThreshold},
             {"BCIProcessingMode", Enum.GetName(typeof(BCIProcessingMode), bciProcessingMode)},
@@ -140,7 +146,8 @@ public class OpenBCIInput : MonoBehaviour
         loggingManager.Log("Meta", metaLog);
     }
 
-    private void LogMotorImageryEvent(MotorImageryEvent miEvent = MotorImageryEvent.Rest, float lastConfidence = -1f) {
+    private void LogMotorImageryEvent(MotorImageryEvent miEvent = MotorImageryEvent.Rest, float lastConfidence = -1f)
+    {
         Dictionary<string, object> gameLog = new Dictionary<string, object>() {
             {"Event", Enum.GetName(typeof(MotorImageryEvent), miEvent)},
             {"BCIConfidence", lastConfidence},
@@ -148,17 +155,20 @@ public class OpenBCIInput : MonoBehaviour
             {"InputNumber", inputNumber},
         };
         loggingManager.Log("Game", gameLog);
-        string buffer = "(";
-        if (bciProcessingMode == BCIProcessingMode.ConsecutiveThreshold) {
-            foreach(float t in consecThresholdBufferVal) {
+        if (bciProcessingMode == BCIProcessingMode.ConsecutiveThreshold)
+        {
+            string buffer = "(";
+            foreach (float t in consecThresholdBufferVal)
+            {
                 buffer += t.ToString("0.000", System.Globalization.CultureInfo.InvariantCulture) + " ";
             }
             buffer += ")";
+            loggingManager.Log("Game", "BCIThresholdBuffer", buffer);
         }
-        loggingManager.Log("Game", "BCIThresholdBuffer", buffer);
     }
 
-    private void LogStateEvent() {
+    private void LogStateEvent()
+    {
         Dictionary<string, object> gameLog = new Dictionary<string, object>() {
             {"Event", "BCIStateUpdated"},
             {"BCIState", Enum.GetName(typeof(BCIState), bciState)},
@@ -166,7 +176,8 @@ public class OpenBCIInput : MonoBehaviour
         loggingManager.Log("Game", gameLog);
     }
 
-    private void LogSample(string eventLabel) {
+    private void LogSample(string eventLabel)
+    {
         Dictionary<string, object> sampleLog = new Dictionary<string, object>() {
             {"Event", eventLabel},
             {"BCIConfidence", confidence},
@@ -177,97 +188,120 @@ public class OpenBCIInput : MonoBehaviour
 
     void Update()
     {
-        if (bciState == BCIState.Disconnected) {
+        if (bciState == BCIState.Disconnected)
+        {
             return;
         }
-       confidence = ((float)ReadSocket());
-       if (confidence == -1f) {
-           // No Stream available.
-           return;
-       }
-       // Update() runs faster (1/60) than our input data (1/16) arrives.
-       // The code below is only run whenever a new value comes in from the BCI side.
-       LogSample("Sample");
-       InputData inputData = new InputData();
-       inputData.confidence = 1 - confidence;
-       inputData.type = InputType.MotorImagery;
-       MotorImageryEvent newClassification = MotorImageryEvent.Rest;
-       inputData.validity = InputValidity.Rejected;
-       if (bciProcessingMode == BCIProcessingMode.SingleThreshold) {
-           newClassification = ProcessSingleThreshold(confidence);
-       } else if (bciProcessingMode == BCIProcessingMode.ConsecutiveThreshold) {
-           newClassification = ProcessConsecutiveThreshold(confidence);
-       }
-       if (newClassification != classification) {
-            if (newClassification == MotorImageryEvent.MotorImagery) {
+        confidence = ((float)ReadSocket());
+        if (confidence == -1f)
+        {
+            // No Stream available.
+            return;
+        }
+        // Update() runs faster (1/60) than our input data (1/16) arrives.
+        // The code below is only run whenever a new value comes in from the BCI side.
+        LogSample("Sample");
+        InputData inputData = new InputData();
+        inputData.confidence = 1 - confidence;
+        inputData.type = InputType.MotorImagery;
+        MotorImageryEvent newClassification = MotorImageryEvent.Rest;
+        inputData.validity = InputValidity.Rejected;
+        if (bciProcessingMode == BCIProcessingMode.SingleThreshold)
+        {
+            newClassification = ProcessSingleThreshold(confidence);
+        }
+        else if (bciProcessingMode == BCIProcessingMode.ConsecutiveThreshold)
+        {
+            newClassification = ProcessConsecutiveThreshold(confidence);
+        }
+        if (newClassification != classification)
+        {
+            if (newClassification == MotorImageryEvent.MotorImagery)
+            {
                 inputData.validity = InputValidity.Accepted;
                 inputNumber++;
             }
-           inputData.inputNumber = inputNumber;
-           LogMotorImageryEvent(newClassification, confidence);
-           onBCIMotorImagery.Invoke(newClassification);
-           onInputFinished.Invoke(inputData);
-           classification = newClassification;
-       }
-       if (confidence != 0f) { 
-        onBCIEvent.Invoke(confidence);
-       }
-       
+            inputData.inputNumber = inputNumber;
+            LogMotorImageryEvent(newClassification, confidence);
+            onBCIMotorImagery.Invoke(newClassification);
+            onInputFinished.Invoke(inputData);
+            classification = newClassification;
+        }
+        if (confidence != 0f)
+        {
+            onBCIEvent.Invoke(confidence);
+        }
+
     }
 
-    private MotorImageryEvent ProcessSingleThreshold(float confidence) {
-       MotorImageryEvent newClassification = MotorImageryEvent.Rest;
-       if (confidence > classificationThreshold) {
-           newClassification = MotorImageryEvent.MotorImagery;
-       }
-       return newClassification;
+    private MotorImageryEvent ProcessSingleThreshold(float confidence)
+    {
+        MotorImageryEvent newClassification = MotorImageryEvent.Rest;
+        if (confidence > classificationThreshold)
+        {
+            newClassification = MotorImageryEvent.MotorImagery;
+        }
+        return newClassification;
     }
 
-    private MotorImageryEvent ProcessConsecutiveThreshold(float confidence) {
+    private MotorImageryEvent ProcessConsecutiveThreshold(float confidence)
+    {
         MotorImageryEvent newClassification = MotorImageryEvent.Rest;
 
         // If our confidence value is higher than the threshold, add a 1 to the buffer.
-        if (confidence > classificationThreshold) {
+        if (confidence > classificationThreshold)
+        {
             consecThresholdBuffer[consecThresholdIndex] = 1;
             consecThresholdBufferVal[consecThresholdIndex] = confidence;
-        } else {
+        }
+        else
+        {
             consecThresholdBuffer[consecThresholdIndex] = 0;
             consecThresholdBufferVal[consecThresholdIndex] = confidence;
         }
 
         // if all positions in the buffer carry a 1, we have motor imagery.
-        if (consecThresholdBuffer.Sum() == consecutiveBufferSize) {
+        if (consecThresholdBuffer.Sum() == consecutiveBufferSize)
+        {
             newClassification = MotorImageryEvent.MotorImagery;
         }
 
         // Increment our buffer index.
-        if (consecThresholdIndex < consecutiveBufferSize-1) {
+        if (consecThresholdIndex < consecutiveBufferSize - 1)
+        {
             consecThresholdIndex++;
-        } else {
+        }
+        else
+        {
             consecThresholdIndex = 0;
         }
 
         return newClassification;
     }
 
-    private IEnumerator ConnectToBCI() {
-        while (mySocket == null || !mySocket.Connected) {
+    private IEnumerator ConnectToBCI()
+    {
+        while (mySocket == null || !mySocket.Connected)
+        {
             bciState = BCIState.Connecting;
             LogStateEvent();
-            onBCIStateChanged.Invoke(Enum.GetName(typeof(BCIState), bciState), "Establishing connection to BCI Socket..");     
+            onBCIStateChanged.Invoke(Enum.GetName(typeof(BCIState), bciState), "Establishing connection to BCI Socket..");
             yield return new WaitForSeconds(0.5f);
-            try {
-                    mySocket = new TcpClient(Host, Port);
-                    theStream = mySocket.GetStream();
-                    theWriter = new StreamWriter(theStream);
-                    theReader = new StreamReader(theStream);
-                }
-            catch(SocketException e) {
+            try
+            {
+                mySocket = new TcpClient(Host, Port);
+                theStream = mySocket.GetStream();
+                theWriter = new StreamWriter(theStream);
+                theReader = new StreamReader(theStream);
+            }
+            catch (SocketException e)
+            {
                 UnityEngine.Debug.LogError(e.Message);
                 bciState = BCIState.Disconnected;
                 onBCIStateChanged.Invoke(Enum.GetName(typeof(BCIState), bciState), "Could not connect to the BCI Socket..");
             }
-            if (bciState == BCIState.Disconnected) {
+            if (bciState == BCIState.Disconnected)
+            {
                 yield return new WaitForSeconds(2f);
             }
         }
@@ -285,7 +319,8 @@ public class OpenBCIInput : MonoBehaviour
 
     public double ReadSocket()
     {
-        if (theStream == null) {
+        if (theStream == null)
+        {
             return -1;
         }
 
@@ -301,7 +336,7 @@ public class OpenBCIInput : MonoBehaviour
             }
 
             if (bciState == BCIState.ReceivingData)
-                {
+            {
                 // raw signal data
                 // [nSamples x nChannels]
                 // all channels for one sample are sent in a sequence, then all channels of the next sample
@@ -311,7 +346,7 @@ public class OpenBCIInput : MonoBehaviour
                 newSignal.samples = testSampleCount;
                 newSignal.channels = testChannelCount;
 
-                double[,] newMatrix = new double[testSampleCount,testChannelCount];
+                double[,] newMatrix = new double[testSampleCount, testChannelCount];
                 //Debug.Log("SampleCount: " + testSampleCount);
                 //Debug.Log("ChannelCount: " + testChannelCount);
 
@@ -322,39 +357,39 @@ public class OpenBCIInput : MonoBehaviour
 
                 int row = 0;
                 int col = 0;
-                    for (int i = 0; i < testSampleCount * testChannelCount * (sizeof(double)); i = i + (sizeof(double) * testChannelCount))
+                for (int i = 0; i < testSampleCount * testChannelCount * (sizeof(double)); i = i + (sizeof(double) * testChannelCount))
+                {
+                    for (int j = 0; j < testChannelCount * sizeof(double); j = j + sizeof(double))
                     {
-                        for (int j = 0; j < testChannelCount * sizeof(double); j = j + sizeof(double))
+
+                        byte[] temp = new byte[8];
+
+                        for (int k = 0; k < 8; k++)
                         {
-
-                            byte[] temp = new byte[8];
-
-                            for(int k = 0; k < 8; k++)
-                            {
-                                temp[k] = buffer[i + j + k];
-                            }
+                            temp[k] = buffer[i + j + k];
+                        }
 
                         if (BitConverter.IsLittleEndian)
                         {
-                           // Array.Reverse(temp);
+                            // Array.Reverse(temp);
                             double test = BitConverter.ToDouble(temp, 0);
-                           
+
                             // TODO TEST THIS
                             //newMatrix[i / (8 * testChannelCount), j / 8] = test;
                             newMatrix[row, col] = test;
                         }
                         col++;
 
-                        }
+                    }
                     row++;
                     col = 0;
-                    }
+                }
 
                 newSignal.signalMatrix = newMatrix;
                 lastSignal = newSignal;
                 lastMatrix = newMatrix;
 
-               return newMatrix[0, 0];
+                return newMatrix[0, 0];
             }
 
         }
@@ -417,8 +452,10 @@ public class OpenBCIInput : MonoBehaviour
 
     }
 
-	public void Disconnect(){
-        if (theStream != null) {
+    public void Disconnect()
+    {
+        if (theStream != null)
+        {
             theReader.Close();
             mySocket.Close();
         }
@@ -426,11 +463,13 @@ public class OpenBCIInput : MonoBehaviour
         LogStateEvent();
         onBCIStateChanged.Invoke(Enum.GetName(typeof(BCIState), bciState), "");
         inputNumber = 0;
-	}
-	void OnApplicationQuit(){
-        if (this.enabled) {
-		    Disconnect();
+    }
+    void OnApplicationQuit()
+    {
+        if (this.enabled)
+        {
+            Disconnect();
         }
-	}
+    }
 
 }
