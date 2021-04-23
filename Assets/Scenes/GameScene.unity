@@ -2794,7 +2794,7 @@ PrefabInstance:
     - target: {fileID: 7026597273347452016, guid: dd3e8964c5dfaf04b860ea9b07604a5f,
         type: 3}
       propertyPath: inputWindowSeconds
-      value: 5
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 7026597273347452016, guid: dd3e8964c5dfaf04b860ea9b07604a5f,
         type: 3}
@@ -2969,7 +2969,7 @@ PrefabInstance:
     - target: {fileID: 7026597273347452016, guid: dd3e8964c5dfaf04b860ea9b07604a5f,
         type: 3}
       propertyPath: accTrials
-      value: 3
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7026597273347452016, guid: dd3e8964c5dfaf04b860ea9b07604a5f,
         type: 3}
