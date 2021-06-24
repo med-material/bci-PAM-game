@@ -90,11 +90,12 @@ public class GameManager : MonoBehaviour
     [Tooltip("The total number of trials is calculated from the trial counts set here.")]
     public int rejTrials = 5;
     public int accTrials = 10;
-    public int fabTrials = 5;
-    public int assistSuccessTrials = 0;
-    public int assistFailTrials = 0;
-    public int explicitShamTrials = 0;
+    //public int fabTrials = 5;
+    public int augSuccessTrials = 0;
+    public int mitigateFailTrials = 0;
+    public int overrideInputTrials = 0;
 
+    
     private int trialsTotal = -1;
     private int currentTrial = -1;
     private TrialType trialResult = TrialType.RejInput;
@@ -170,15 +171,15 @@ public class GameManager : MonoBehaviour
             behavior = UrnEntryBehavior.Success
         };
 
-        mechanisms["FabInput"] = new Mechanism
-        {
-            name = "FabInput",
-            trialType = TrialType.FabInput,
-            rate = 0f,
-            trials = fabTrials,
-            trialsLeft = fabTrials,
-            behavior = UrnEntryBehavior.Persist
-        };
+        //mechanisms["FabInput"] = new Mechanism
+        //{
+        //    name = "FabInput",
+        //    trialType = TrialType.FabInput,
+        //    rate = 0f,
+        //    trials = fabTrials,
+        //    trialsLeft = fabTrials,
+        //    behavior = UrnEntryBehavior.Persist
+        //};
 
         mechanisms["RejInput"] = new Mechanism
         {
@@ -194,8 +195,8 @@ public class GameManager : MonoBehaviour
             name = "AssistSuccess",
             trialType = TrialType.AssistSuccess,
             rate = 0f,
-            trials = assistSuccessTrials,
-            trialsLeft = assistSuccessTrials,
+            trials = augSuccessTrials,
+            trialsLeft = augSuccessTrials,
             behavior = UrnEntryBehavior.Persist
         };
         mechanisms["AssistFail"] = new Mechanism
@@ -203,8 +204,8 @@ public class GameManager : MonoBehaviour
             name = "AssistFail",
             trialType = TrialType.AssistFail,
             rate = 0f,
-            trials = assistFailTrials,
-            trialsLeft = assistFailTrials,
+            trials = mitigateFailTrials,
+            trialsLeft = mitigateFailTrials,
             behavior = UrnEntryBehavior.Persist
         };
         mechanisms["ExplicitSham"] = new Mechanism
@@ -212,8 +213,8 @@ public class GameManager : MonoBehaviour
             name = "ExplicitSham",
             trialType = TrialType.ExplicitSham,
             rate = 0f,
-            trials = explicitShamTrials,
-            trialsLeft = explicitShamTrials,
+            trials = overrideInputTrials,
+            trialsLeft = overrideInputTrials,
             behavior = UrnEntryBehavior.Persist
         };
     }
@@ -235,12 +236,12 @@ public class GameManager : MonoBehaviour
     private void LogMeta()
     {
         Dictionary<string, object> metaLog = new Dictionary<string, object>() {
-            {"FabInputTrials", fabTrials},
+            //{"FabInputTrials", fabTrials},
             {"AccInputTrials", accTrials},
             {"RejInputTrials", rejTrials},
-            {"ExplicitShamTrials", explicitShamTrials},
-            {"AssistSuccessTrials", assistSuccessTrials},
-            {"AssistFailTrials", assistFailTrials},
+            {"OverrideInputTrials", overrideInputTrials},
+            {"AugSuccessTrials", augSuccessTrials},
+            {"MitigateFailTrials", mitigateFailTrials},
             {"Trials", trialsTotal},
             {"InterTrialInterval_sec", interTrialIntervalSeconds},
             {"InputWindow_sec", inputWindowSeconds},
