@@ -43,6 +43,9 @@ public class GameController : MonoBehaviour
     public class OnFishEvent : UnityEvent<string> { }
     public OnFishEvent onFishEvent;
 
+    [Serializable]
+    public class OnArrowKeyInput : UnityEvent<string> { }
+    public OnArrowKeyInput onArrowKeyInput;
 
     // Start is called before the first frame update
     void Start()
@@ -60,10 +63,12 @@ public class GameController : MonoBehaviour
             if ((Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)) && lane < 3)
             {
                 HookDown();
+                onArrowKeyInput.Invoke("ArrowKeyDown");
             }
             if ((Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) && lane > 0)
             {
                 HookUp();
+                onArrowKeyInput.Invoke("ArrowKeyUp");
             }
         }
     }
@@ -113,19 +118,19 @@ public class GameController : MonoBehaviour
                 break;
 
             //Sham is ... complicated
-            case TrialType.ExplicitSham:
+            case TrialType.OverrideInput:
                 player.Sham(1);
                 sham = true;
 
                 break;
 
-            case TrialType.AssistSuccess:
+            case TrialType.AugSuccess:
                 //The assisted success movement feedback doesn't trigger until partway into the animation
                 player.AssistedSuccess(1);
 
                 break;
 
-            case TrialType.AssistFail:
+            case TrialType.MitigateFail:
                 AssistedFailure();
 
                 break;
@@ -169,7 +174,7 @@ public class GameController : MonoBehaviour
 
     public void FishEscaped()
     {
-        onFishEvent.Invoke("FishEscaped");
+        onFishEvent.Invoke("FishNotHooked");
     }
 
     void NormalSuccess()
@@ -290,6 +295,7 @@ public class GameController : MonoBehaviour
             if (lane != 0)
             {
                 FishLost();
+                onFishEvent.Invoke("GameOver");
             }
         }
     }
@@ -318,7 +324,8 @@ public class GameController : MonoBehaviour
         column = 3;
         hook.Move(new Vector3(columnPos[column], lanePos[lane]), true, 1.2f);
 
-        Invoke("Restart", 2);
+        if(!gameManager.gameOver)
+            Invoke("Restart", 2);  
     }
 
     void Restart()
@@ -328,7 +335,7 @@ public class GameController : MonoBehaviour
 
         if (won)
         {
-            ui.AddFish(fishSprites[sprite], winCounter);
+            //ui.AddFish(fishSprites[sprite], winCounter);
 
             basin.Splash();
             won = false;
@@ -363,7 +370,7 @@ public class GameController : MonoBehaviour
         if (!gameManager.gameOver)
         {
 
-            int size = UnityEngine.Random.Range(0, 3);
+            int size = UnityEngine.Random.Range(1, 3);
 
             int leftToRight = UnityEngine.Random.Range(0, 2);
 

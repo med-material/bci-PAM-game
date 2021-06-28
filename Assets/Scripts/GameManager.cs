@@ -78,9 +78,17 @@ public enum TrialType
     AccInput,
     FabInput,
     RejInput,
-    AssistSuccess,
-    AssistFail,
-    ExplicitSham
+    AugSuccess,
+    MitigateFail,
+    OverrideInput
+}
+
+public enum Condition
+{
+    Control,
+    OverrideInput,
+    AugmentedSucces,
+    MitigatedFailure
 }
 
 public class GameManager : MonoBehaviour
@@ -88,12 +96,15 @@ public class GameManager : MonoBehaviour
 
     [Header("Trial Setup")]
     [Tooltip("The total number of trials is calculated from the trial counts set here.")]
-    public int rejTrials = 5;
-    public int accTrials = 10;
+    private int rejTrials = 0;
+    private int accTrials = 20;
     //public int fabTrials = 5;
-    public int augSuccessTrials = 0;
-    public int mitigateFailTrials = 0;
-    public int overrideInputTrials = 0;
+    private int augSuccessTrials = 0;
+    private int mitigateFailTrials = 0;
+    private int overrideInputTrials = 0;
+
+    //[Range(0,3)]
+    public Condition condition;
 
     
     private int trialsTotal = -1;
@@ -149,6 +160,7 @@ public class GameManager : MonoBehaviour
     public bool assistSuccessPossible;
     public bool gameOver;
     string fish;
+    string arrowKey;
 
     void Start()
     {
@@ -161,6 +173,30 @@ public class GameManager : MonoBehaviour
 
     private void SetupMechanisms()
     {
+        //Setting up PAM conditions
+        switch(condition)
+        {
+            case Condition.Control:
+                accTrials = 5;
+                break;
+
+            case Condition.OverrideInput:
+                accTrials = 14;
+                overrideInputTrials = 6;
+                break;
+
+            case Condition.AugmentedSucces:
+                accTrials = 8;
+                rejTrials = 6;
+                augSuccessTrials = 6;
+                break;
+
+            case Condition.MitigatedFailure:
+                accTrials = 14;
+                mitigateFailTrials = 6;
+                break;
+        }
+
         mechanisms["AccInput"] = new Mechanism
         {
             name = "AccInput",
@@ -190,32 +226,32 @@ public class GameManager : MonoBehaviour
             trialsLeft = rejTrials,
             behavior = UrnEntryBehavior.Override
         };
-        mechanisms["AssistSuccess"] = new Mechanism
+        mechanisms["AugSuccess"] = new Mechanism
         {
-            name = "AssistSuccess",
-            trialType = TrialType.AssistSuccess,
+            name = "AugSuccess",
+            trialType = TrialType.AugSuccess,
             rate = 0f,
             trials = augSuccessTrials,
             trialsLeft = augSuccessTrials,
             behavior = UrnEntryBehavior.Persist
         };
-        mechanisms["AssistFail"] = new Mechanism
+        mechanisms["MitigateFail"] = new Mechanism
         {
-            name = "AssistFail",
-            trialType = TrialType.AssistFail,
+            name = "MitigateFail",
+            trialType = TrialType.MitigateFail,
             rate = 0f,
             trials = mitigateFailTrials,
             trialsLeft = mitigateFailTrials,
-            behavior = UrnEntryBehavior.Persist
+            behavior = UrnEntryBehavior.PAM
         };
-        mechanisms["ExplicitSham"] = new Mechanism
+        mechanisms["OverrideInput"] = new Mechanism
         {
-            name = "ExplicitSham",
-            trialType = TrialType.ExplicitSham,
+            name = "OverrideInput",
+            trialType = TrialType.OverrideInput,
             rate = 0f,
             trials = overrideInputTrials,
             trialsLeft = overrideInputTrials,
-            behavior = UrnEntryBehavior.Persist
+            behavior = UrnEntryBehavior.PAM
         };
     }
 
@@ -245,8 +281,9 @@ public class GameManager : MonoBehaviour
             {"Trials", trialsTotal},
             {"InterTrialInterval_sec", interTrialIntervalSeconds},
             {"InputWindow_sec", inputWindowSeconds},
-            {"noInputReceivedFabAlarm_sec", noInputReceivedFabAlarm},
-            {"FabAlarmVariability_sec", fabAlarmVariability},
+            //{"noInputReceivedFabAlarm_sec", noInputReceivedFabAlarm},
+            //{"FabAlarmVariability_sec", fabAlarmVariability},
+            
         };
         loggingManager.Log("Meta", metaLog);
     }
@@ -291,6 +328,15 @@ public class GameManager : MonoBehaviour
             gameLog["FishEvent"] = "NA";
         }
 
+        if(eventLabel == "ArrowKeyInput")
+        {
+            gameLog["ArrowKeyInput"] = arrowKey;
+        }
+        else
+        {
+            gameLog["ArrowKeyInput"] = "NA";
+        }
+
 
         loggingManager.Log("Game", gameLog);
     }
@@ -299,6 +345,13 @@ public class GameManager : MonoBehaviour
     {
         fish = fishEvent;
         LogEvent("FishEvent");
+    }
+
+    public void onArrowKeyInput(string arrowKeyEvent)
+    {
+        arrowKey = arrowKeyEvent;
+        Debug.Log(arrowKey);
+        LogEvent("ArrowKeyInput");
     }
 
     // Update is called once per frame
@@ -500,6 +553,7 @@ public class GameManager : MonoBehaviour
                 else
                 {
                     trialResult = TrialType.RejInput;
+                    //trialResult = TrialType.MitigateFail;
                 }
             }
             else if (trialGoal == TrialType.RejInput)
@@ -507,14 +561,11 @@ public class GameManager : MonoBehaviour
                 trialResult = TrialType.RejInput;
                 // ignore the input.
             }
-            else if (trialGoal == TrialType.AssistSuccess)
+            else if (trialGoal == TrialType.AugSuccess)
             {
-                if (inputData.validity == InputValidity.Accepted)
+                if (assistSuccessPossible && inputData.validity == InputValidity.Accepted)
                 {
-                    if (assistSuccessPossible)
-                        trialResult = TrialType.AssistSuccess;
-                    else
-                        trialResult = TrialType.AccInput;
+                    trialResult = TrialType.AugSuccess;
                     CloseInputWindow();
                 }
                 else
@@ -530,13 +581,30 @@ public class GameManager : MonoBehaviour
         }
         else if (windowExpired)
         {
-            if (trialGoal == TrialType.AssistFail)
+
+            if(trialGoal == TrialType.AccInput)
             {
-                trialResult = TrialType.AssistFail;
+                int rnd = UnityEngine.Random.Range(0, 10);
+
+                Debug.Log("random number: " + rnd);
+
+                if (rnd < 3)
+                {
+                    if (condition == Condition.OverrideInput && mechanisms["OverrideInput"].trialsLeft != 0)
+                    {
+                        trialResult = TrialType.OverrideInput;
+                    }
+                    else if (condition == Condition.MitigatedFailure && mechanisms["MitigateFail"].trialsLeft != 0)
+                        trialResult = TrialType.MitigateFail;
+                }
             }
-            else if (trialGoal == TrialType.ExplicitSham)
+            else if (trialGoal == TrialType.MitigateFail)
             {
-                trialResult = TrialType.ExplicitSham;
+                trialResult = TrialType.MitigateFail;
+            }
+            else if (trialGoal == TrialType.OverrideInput)
+            {
+                trialResult = TrialType.OverrideInput;
             }
             CloseInputWindow();
         }
@@ -572,5 +640,10 @@ public class GameManager : MonoBehaviour
         GameData gameData = createGameData();
         onGameStateChanged.Invoke(gameData);
     }
+
+    //void OnApplicationQuit()
+    //{
+    //    EndGame();
+    //}
 
 }

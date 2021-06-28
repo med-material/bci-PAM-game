@@ -12,6 +12,7 @@ public enum UrnEntryBehavior {
     Override,
     Persist,
     Success,
+    PAM
 }
 
 public class UrnModel : MonoBehaviour
@@ -72,16 +73,18 @@ public class UrnModel : MonoBehaviour
     }
 
     public void SetEntryResult(string result) {
-        Debug.Log(resultedOrder.Count);
+        //Debug.Log(resultedOrder.Count);
         resultedOrder[index] = result;
+
+        Debug.Log("result: " + result);
 
         if (result == designedOrder[index]) {
             index++;
             return;
         } else {
             string entryName = designedOrder[index];
-            if (entryTypes[entryName].behavior == UrnEntryBehavior.Persist || entryTypes[entryName].behavior == UrnEntryBehavior.Success) {
-                OverrideEntryInOrder(entryName);
+            if (entryTypes[entryName].behavior != UrnEntryBehavior.Override) {
+                OverrideEntryInOrder(entryName, result);
             }
             index++;
             Debug.Log("New Resulted Order: " + ListToString(resultedOrder));
@@ -148,26 +151,38 @@ public class UrnModel : MonoBehaviour
         Debug.Log("New Designed Order: " + ListToString(designedOrder));
     }
 
-    private void OverrideEntryInOrder(string entryName) {
+    private void OverrideEntryInOrder(string entryName, string result) {
         string name;
         for (int i = index; i < designedOrder.Count; i++) {
             name = designedOrder[i];
-            if(entryName == "AssistSuccess")
+            if(entryName == "AugmentSuccess")
             {
                 if(entryTypes[name].behavior == UrnEntryBehavior.Success)
                 {
-                    Debug.Log("Overwriting " + name + " with " + entryName + "at position " + i.ToString());
+                    Debug.Log("Overwriting " + name + " with " + entryName + " at position " + i.ToString());
                     designedOrder[i] = entryName;
                     return;
                 }
             }
             else
             {
-                if (entryTypes[name].behavior == UrnEntryBehavior.Override)
+                if (result == "RejInput")
                 {
-                    Debug.Log("Overwriting " + name + " with " + entryName + "at position " + i.ToString());
-                    designedOrder[i] = entryName;
-                    return;
+                    if(entryTypes[name].behavior == UrnEntryBehavior.Override)
+                    {
+                        Debug.Log("Overwriting " + name + " with " + entryName + " at position " + i.ToString());
+                        designedOrder[i] = entryName;
+                        return;
+                    }
+                }
+                else
+                {
+                    if(entryTypes[name].behavior == UrnEntryBehavior.PAM)
+                    {
+                        Debug.Log("Overwriting " + name + " with " + entryName + " at position " + i.ToString());
+                        designedOrder[i] = entryName;
+                        return;
+                    }
                 }
             }
         }

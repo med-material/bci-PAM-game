@@ -138,7 +138,7 @@ public class FishBehaviour : MonoBehaviour
         else
         {
             StartSwimming(transform.position, new Vector3(exitPoint.x, transform.position.y), 2);
-            gc.FishEscaped();
+            //gc.FishEscaped();
         }
     }
 

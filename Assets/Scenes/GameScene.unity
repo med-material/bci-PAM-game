@@ -577,7 +577,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &422096984
 RectTransform:
   m_ObjectHideFlags: 0
@@ -690,7 +690,32 @@ MonoBehaviour:
   moving: 0
   onFishEvent:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1466692621}
+        m_MethodName: onFishEvent
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  onArrowKeyInput:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1466692621}
+        m_MethodName: onArrowKeyInput
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!4 &494624097
 Transform:
   m_ObjectHideFlags: 0
@@ -1997,18 +2022,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 1466692620}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1156982880
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1156982877}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d677a488b3488d5479559490f8d47e91, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1156982881
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2689,7 +2702,7 @@ PrefabInstance:
     - target: {fileID: 7026597273347452016, guid: dd3e8964c5dfaf04b860ea9b07604a5f,
         type: 3}
       propertyPath: onGameStateChanged.m_PersistentCalls.m_Calls.Array.size
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 7026597273347452016, guid: dd3e8964c5dfaf04b860ea9b07604a5f,
         type: 3}
@@ -3024,6 +3037,11 @@ PrefabInstance:
     - target: {fileID: 7026597273347452016, guid: dd3e8964c5dfaf04b860ea9b07604a5f,
         type: 3}
       propertyPath: overrideInputTrials
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7026597273347452016, guid: dd3e8964c5dfaf04b860ea9b07604a5f,
+        type: 3}
+      propertyPath: condition
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7026597273347452017, guid: dd3e8964c5dfaf04b860ea9b07604a5f,
@@ -3581,7 +3599,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -11, y: 418}
+  m_AnchoredPosition: {x: -2, y: 418}
   m_SizeDelta: {x: 194, y: 189}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1772433729
