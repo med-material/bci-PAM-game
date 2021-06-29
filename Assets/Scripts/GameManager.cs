@@ -177,7 +177,7 @@ public class GameManager : MonoBehaviour
         switch(condition)
         {
             case Condition.Control:
-                accTrials = 5;
+                accTrials = 20;
                 break;
 
             case Condition.OverrideInput:
