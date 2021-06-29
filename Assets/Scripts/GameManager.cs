@@ -157,7 +157,9 @@ public class GameManager : MonoBehaviour
     private UrnModel urn;
 
     // Added for PAM
+    [HideInInspector]
     public bool assistSuccessPossible;
+    [HideInInspector]
     public bool gameOver;
     string fish;
     string arrowKey;
@@ -641,9 +643,9 @@ public class GameManager : MonoBehaviour
         onGameStateChanged.Invoke(gameData);
     }
 
-    //void OnApplicationQuit()
-    //{
-    //    EndGame();
-    //}
+    void OnApplicationQuit()
+    {
+        EndGame();
+    }
 
 }

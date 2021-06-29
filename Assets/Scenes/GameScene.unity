@@ -956,7 +956,7 @@ PrefabInstance:
     - target: {fileID: 6594399260499185197, guid: 540ff065280f62242b56afbae3a35534,
         type: 3}
       propertyPath: m_Enabled
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6594399260499185198, guid: 540ff065280f62242b56afbae3a35534,
         type: 3}
@@ -1373,7 +1373,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 847206122}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 083b00183bc198e4698b1e2879b3ace5, type: 3}
   m_Name: 
@@ -2802,12 +2802,12 @@ PrefabInstance:
     - target: {fileID: 7026597273347452016, guid: dd3e8964c5dfaf04b860ea9b07604a5f,
         type: 3}
       propertyPath: interTrialIntervalSeconds
-      value: 2
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7026597273347452016, guid: dd3e8964c5dfaf04b860ea9b07604a5f,
         type: 3}
       propertyPath: inputWindowSeconds
-      value: 1
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 7026597273347452016, guid: dd3e8964c5dfaf04b860ea9b07604a5f,
         type: 3}

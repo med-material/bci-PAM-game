@@ -8,6 +8,7 @@ using UnityEngine.UI;
 
 public class GameController : MonoBehaviour
 {
+    [HideInInspector]
     public int winCounter = 0;
 
     public HookBehaviour hook;
@@ -37,6 +38,7 @@ public class GameController : MonoBehaviour
     bool won;
     bool lost;
 
+    [HideInInspector]
     public bool moving; //registers whether the feedback is still playing
 
     [Serializable]
@@ -323,9 +325,8 @@ public class GameController : MonoBehaviour
         lane = 0;
         column = 3;
         hook.Move(new Vector3(columnPos[column], lanePos[lane]), true, 1.2f);
-
-        if(!gameManager.gameOver)
-            Invoke("Restart", 2);  
+        
+        Invoke("Restart", 2);  
     }
 
     void Restart()
