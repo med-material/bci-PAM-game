@@ -645,7 +645,8 @@ public class GameManager : MonoBehaviour
 
     void OnApplicationQuit()
     {
-        EndGame();
+        if(gameState != GameState.Stopped)
+            EndGame();
     }
 
 }
