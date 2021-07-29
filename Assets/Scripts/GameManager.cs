@@ -12,8 +12,6 @@ public struct GameData
     public float interTrialIntervalSeconds;
     public float inputWindowSeconds;
     public GameState gameState;
-    public float noInputReceivedFabAlarm;
-    public float fabAlarmVariability;
 }
 
 public class Mechanism
@@ -44,14 +42,12 @@ public enum InputType
 {
     KeySequence,
     MotorImagery,
-    BlinkDetection,
-    FabInput
+    BlinkDetection
 }
 
 public class GameDecisionData
 {
     public TrialType decision;
-    public float currentFabAlarm;
 }
 
 public struct GameTimers
@@ -76,7 +72,7 @@ public enum GameState
 public enum TrialType
 {
     AccInput,
-    FabInput,
+    //FabInput,
     RejInput,
     AugSuccess,
     MitigateFail,
@@ -94,17 +90,21 @@ public enum Condition
 public class GameManager : MonoBehaviour
 {
 
-    [Header("Trial Setup")]
-    [Tooltip("The total number of trials is calculated from the trial counts set here.")]
+    
     private int rejTrials = 0;
     private int accTrials = 20;
-    //public int fabTrials = 5;
     private int augSuccessTrials = 0;
     private int mitigateFailTrials = 0;
     private int overrideInputTrials = 0;
+    private int PAMtrials = 0;
 
-    //[Range(0,3)]
-    public Condition condition;
+    [Header("Experiment Setup")]
+    public Condition condition = Condition.Control;
+    public int trials = 20;
+    [Range(0,1)]
+    public float positiveRate = 0.5f;
+    [Range(0, 1)]
+    public float PAMRate = 0.3f;
 
     
     private int trialsTotal = -1;
@@ -113,17 +113,6 @@ public class GameManager : MonoBehaviour
     private TrialType trialGoal = TrialType.RejInput;
 
     private Dictionary<string, Mechanism> mechanisms = new Dictionary<string, Mechanism>();
-
-    [Header("FabInput Settings")]
-    [Tooltip("When should the fabrication fire.")]
-    [SerializeField]
-    private float noInputReceivedFabAlarm = 0.5f; // fixed alarm in seconds relative to input window, at what point should we try and trigger fab input.
-    [SerializeField]
-    private float fabAlarmVariability = 0.5f; //added delay variability to make the alarm unpredictable.
-    private float currentFabAlarm = 0f;
-    private bool alarmFired = false;
-    private int fabInputNumber = 0;
-
 
     [Header("InputWindow Settings")]
     [Tooltip("Length of Window and Inter-trial interval.")]
@@ -158,7 +147,7 @@ public class GameManager : MonoBehaviour
 
     // Added for PAM
     [HideInInspector]
-    public bool assistSuccessPossible;
+    public bool augSuccessPossible;
     [HideInInspector]
     public bool gameOver;
     string fish;
@@ -175,29 +164,39 @@ public class GameManager : MonoBehaviour
 
     private void SetupMechanisms()
     {
-        //Setting up PAM conditions
-        switch(condition)
+        accTrials = (int)(trials * positiveRate);
+        if (condition == Condition.Control)
         {
-            case Condition.Control:
-                accTrials = 20;
-                break;
-
-            case Condition.OverrideInput:
-                accTrials = 14;
-                overrideInputTrials = 6;
-                break;
-
-            case Condition.AugmentedSucces:
-                accTrials = 8;
-                rejTrials = 6;
-                augSuccessTrials = 6;
-                break;
-
-            case Condition.MitigatedFailure:
-                accTrials = 14;
-                mitigateFailTrials = 6;
-                break;
+            PAMRate = 0;
+            PAMtrials = 0;
         }
+        else
+        {
+            PAMtrials = (int)(trials * PAMRate);
+
+            if (condition == Condition.AugmentedSucces)
+            {
+                accTrials = accTrials - PAMtrials;
+                augSuccessTrials = PAMtrials;
+            }
+            else if (condition == Condition.MitigatedFailure)
+            {
+                mitigateFailTrials = PAMtrials;
+            }
+            else if (condition == Condition.OverrideInput)
+            {
+                overrideInputTrials = PAMtrials;
+            }
+        }
+        rejTrials = trials - accTrials - PAMtrials;
+
+
+        if ((condition != Condition.AugmentedSucces && (positiveRate + PAMRate) > 1) ||
+            (condition == Condition.AugmentedSucces && positiveRate < PAMRate))
+        {
+            Debug.LogError("WARNING: Invalid setup. Check the positive/PAM rate.");
+        }
+
 
         mechanisms["AccInput"] = new Mechanism
         {
@@ -208,17 +207,6 @@ public class GameManager : MonoBehaviour
             trialsLeft = accTrials,
             behavior = UrnEntryBehavior.Success
         };
-
-        //mechanisms["FabInput"] = new Mechanism
-        //{
-        //    name = "FabInput",
-        //    trialType = TrialType.FabInput,
-        //    rate = 0f,
-        //    trials = fabTrials,
-        //    trialsLeft = fabTrials,
-        //    behavior = UrnEntryBehavior.Persist
-        //};
-
         mechanisms["RejInput"] = new Mechanism
         {
             name = "RejInput",
@@ -274,7 +262,9 @@ public class GameManager : MonoBehaviour
     private void LogMeta()
     {
         Dictionary<string, object> metaLog = new Dictionary<string, object>() {
-            //{"FabInputTrials", fabTrials},
+            {"Condition", condition},
+            {"PosRate", positiveRate},
+            {"PAMRate", PAMRate},
             {"AccInputTrials", accTrials},
             {"RejInputTrials", rejTrials},
             {"OverrideInputTrials", overrideInputTrials},
@@ -283,9 +273,6 @@ public class GameManager : MonoBehaviour
             {"Trials", trialsTotal},
             {"InterTrialInterval_sec", interTrialIntervalSeconds},
             {"InputWindow_sec", inputWindowSeconds},
-            //{"noInputReceivedFabAlarm_sec", noInputReceivedFabAlarm},
-            //{"FabAlarmVariability_sec", fabAlarmVariability},
-            
         };
         loggingManager.Log("Meta", metaLog);
     }
@@ -299,7 +286,6 @@ public class GameManager : MonoBehaviour
             {"InterTrialTimer", interTrialTimer},
             {"InputWindowTimer", inputWindowTimer},
             {"GameState", System.Enum.GetName(typeof(GameState), gameState)},
-            {"CurrentFabAlarm", currentFabAlarm},
         };
 
         foreach (KeyValuePair<string, Mechanism> pair in mechanisms)
@@ -355,54 +341,30 @@ public class GameManager : MonoBehaviour
         Debug.Log(arrowKey);
         LogEvent("ArrowKeyInput");
     }
-
-    // Update is called once per frame
+    
     void Update()
     {
         if (gameState == GameState.Running)
         {
             if (inputWindow == InputWindowState.Closed)
             {
-                alarmFired = false;
                 interTrialTimer += Time.deltaTime;
                 if (interTrialTimer > interTrialIntervalSeconds && currentTrial < trialsTotal)
                 {
-                    interTrialTimer = 0f;
                     inputWindow = InputWindowState.Open;
-                    SetFabAlarmVariability();
                     onInputWindowChanged.Invoke(inputWindow);
                     LogEvent("InputWindowChange");
+                    interTrialTimer = 0f;
                 }
-
-                // Removed for PAM
-                //else if (interTrialTimer > interTrialIntervalSeconds)
-                //{
-                //    EndGame();
-                //}
             }
             else if (inputWindow == InputWindowState.Open)
             {
-                //Debug.Log("inputwindow is open");
                 inputWindowTimer += Time.deltaTime;
-                if (inputWindowTimer > currentFabAlarm && alarmFired == false)
-                {
-                    //Debug.Log("inputWindowTimer exceeded currentFabAlarm.");
-                    // Fire fabricated input (if scheduled).
-                    InputData fabInputData = new InputData
-                    {
-                        validity = InputValidity.Accepted,
-                        type = InputType.FabInput,
-                        inputNumber = fabInputNumber
-                    };
-                    MakeInputDecision(fabInputData, false);
-                    alarmFired = true;
-                }
-                else if (inputWindowTimer > inputWindowSeconds)
+                if (inputWindowTimer > inputWindowSeconds)
                 {
                     //Debug.Log("inputWindow expired.");
                     // The input window expired
                     MakeInputDecision(null, true);
-                    alarmFired = false;
                 }
             }
         }
@@ -413,11 +375,6 @@ public class GameManager : MonoBehaviour
         onGameTimeUpdate.Invoke(gameTimers);
     }
 
-    public void SetFabAlarmVariability()
-    {
-        currentFabAlarm = UnityEngine.Random.Range(noInputReceivedFabAlarm - fabAlarmVariability, noInputReceivedFabAlarm + fabAlarmVariability);
-    }
-
     public GameData createGameData()
     {
         GameData gameData = new GameData();
@@ -425,8 +382,6 @@ public class GameManager : MonoBehaviour
         gameData.interTrialIntervalSeconds = interTrialIntervalSeconds;
         gameData.inputWindowSeconds = inputWindowSeconds;
         gameData.gameState = gameState;
-        gameData.noInputReceivedFabAlarm = noInputReceivedFabAlarm;
-        gameData.fabAlarmVariability = fabAlarmVariability;
         return gameData;
     }
 
@@ -494,10 +449,10 @@ public class GameManager : MonoBehaviour
     {
         // update the window state.
         inputWindow = InputWindowState.Closed;
-        interTrialTimer -= (inputWindowSeconds - inputWindowTimer);
-        inputWindowTimer = 0f;
+        //interTrialTimer -= (inputWindowSeconds - inputWindowTimer);
         onInputWindowChanged.Invoke(inputWindow);
         LogEvent("InputWindowChange");
+        inputWindowTimer = 0f;
 
         // store the input decision.
         urn.SetEntryResult(System.Enum.GetName(typeof(TrialType), trialResult));
@@ -507,14 +462,9 @@ public class GameManager : MonoBehaviour
         CalculateRecogRate();
         // Send Decision Data
         GameDecisionData gameDecisionData = new GameDecisionData();
-        gameDecisionData.currentFabAlarm = currentFabAlarm;
         gameDecisionData.decision = trialResult;
         gameDecision.Invoke(gameDecisionData);
         LogEvent("GameDecision");
-        ////Debug.Log("designedInputOrder: " + designedInputOrder.Count);
-        ////Debug.Log("actualInputOrder: " + actualInputOrder.Count);
-        ////Debug.Log("Decision: " + System.Enum.GetName(typeof(InputTypes), currentInputDecision));
-        //UpdateDesignedInputOrder();
         inputIndex++;
 
         //Added for PAM
@@ -532,20 +482,7 @@ public class GameManager : MonoBehaviour
 
         if (inputData != null)
         {
-            if (inputData.type == InputType.FabInput)
-            {
-                if (trialGoal == TrialType.FabInput)
-                {
-                    trialResult = TrialType.FabInput;
-                    CloseInputWindow();
-                }
-                //else if (trialGoal == TrialType.ExplicitSham)
-                //{
-                //    trialResult = TrialType.ExplicitSham;
-                //    CloseInputWindow();
-                //}
-            }
-            else if (trialGoal == TrialType.AccInput)
+            if (trialGoal == TrialType.AccInput)
             {
                 if (inputData.validity == InputValidity.Accepted)
                 {
@@ -555,7 +492,6 @@ public class GameManager : MonoBehaviour
                 else
                 {
                     trialResult = TrialType.RejInput;
-                    //trialResult = TrialType.MitigateFail;
                 }
             }
             else if (trialGoal == TrialType.RejInput)
@@ -565,7 +501,7 @@ public class GameManager : MonoBehaviour
             }
             else if (trialGoal == TrialType.AugSuccess)
             {
-                if (assistSuccessPossible && inputData.validity == InputValidity.Accepted)
+                if (augSuccessPossible && inputData.validity == InputValidity.Accepted)
                 {
                     trialResult = TrialType.AugSuccess;
                     CloseInputWindow();
@@ -575,11 +511,6 @@ public class GameManager : MonoBehaviour
                     trialResult = TrialType.RejInput;
                 }
             }
-            //else if (trialGoal == TrialType.AssistFail)
-            //{
-            //    trialResult = TrialType.AssistFail;
-            //    // ignore the input.
-            //}
         }
         else if (windowExpired)
         {
@@ -629,19 +560,19 @@ public class GameManager : MonoBehaviour
         gameState = GameState.Running;
     }
 
-    public void SetInputWindowSeconds(float time)
-    {
-        inputWindowSeconds = time;
-        GameData gameData = createGameData();
-        onGameStateChanged.Invoke(gameData);
-    }
+    // public void SetInputWindowSeconds(float time)
+    // {
+    //     inputWindowSeconds = time;
+    //     GameData gameData = createGameData();
+    //     onGameStateChanged.Invoke(gameData);
+    // }
 
-    public void SetInterTrialSeconds(float time)
-    {
-        interTrialIntervalSeconds = time;
-        GameData gameData = createGameData();
-        onGameStateChanged.Invoke(gameData);
-    }
+    // public void SetInterTrialSeconds(float time)
+    // {
+    //     interTrialIntervalSeconds = time;
+    //     GameData gameData = createGameData();
+    //     onGameStateChanged.Invoke(gameData);
+    // }
 
     void OnApplicationQuit()
     {

@@ -20,16 +20,9 @@ public class GameUI : MonoBehaviour
     public GameObject endScreen;
     public GameObject UIElements;
 
-    // Start is called before the first frame update
     void Start()
     {
         endScreen.GetComponent<Animator>().enabled = false;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
     }
 
     public void CreateBaitCounter(int inputBlocks)
@@ -71,24 +64,25 @@ public class GameUI : MonoBehaviour
     public void AddFish(Sprite fishSprite, int winCounter)
     {
         GameObject caughtFish;
-        if (winCounter < 6)
-        {
-            caughtFish = Instantiate(fishCaughtUI,
-                new Vector3(fishCaughtUIRef.transform.position.x - Screen.width / 13 * (winCounter - 1), allCaughtUIBar.transform.position.y),
-                Quaternion.identity, allCaughtUIBar.transform);
-        }
-        else
-        {
-            if(winCounter == 6)
+        if(allCaughtUIBar.activeInHierarchy) {    
+            if (winCounter < 6)
             {
-                allCaughtUIBar2.SetActive(true);
+                caughtFish = Instantiate(fishCaughtUI,
+                    new Vector3(fishCaughtUIRef.transform.position.x - Screen.width / 13 * (winCounter - 1), allCaughtUIBar.transform.position.y),
+                    Quaternion.identity, allCaughtUIBar.transform);
             }
-            caughtFish = Instantiate(fishCaughtUI,
-                new Vector3(fishCaughtUIRef.transform.position.x - Screen.width / 13 * (winCounter - 6), allCaughtUIBar2.transform.position.y),
-                Quaternion.identity, allCaughtUIBar2.transform);
+            else
+            {
+                if(winCounter == 6)
+                {
+                    allCaughtUIBar2.SetActive(true);
+                }
+                caughtFish = Instantiate(fishCaughtUI,
+                    new Vector3(fishCaughtUIRef.transform.position.x - Screen.width / 13 * (winCounter - 6), allCaughtUIBar2.transform.position.y),
+                    Quaternion.identity, allCaughtUIBar2.transform);
+            }
+            caughtFish.GetComponent<Image>().sprite = fishSprite;
         }
-
-        caughtFish.GetComponent<Image>().sprite = fishSprite;
     }
 
     public void DisableUI()

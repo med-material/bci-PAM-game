@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,7 +34,7 @@ public class GameController : MonoBehaviour
 
     bool gameStarted;
     bool bciInput;
-    bool sham;
+    bool overrideInput;
     bool won;
     bool lost;
 
@@ -49,7 +49,6 @@ public class GameController : MonoBehaviour
     public class OnArrowKeyInput : UnityEvent<string> { }
     public OnArrowKeyInput onArrowKeyInput;
 
-    // Start is called before the first frame update
     void Start()
     {
         fishRevealed.SetActive(false);
@@ -111,30 +110,24 @@ public class GameController : MonoBehaviour
         {
             case TrialType.RejInput:
                 NormalFailure();
-
                 break;
 
             case TrialType.AccInput:
                 NormalSuccess();
-
                 break;
 
-            //Sham is ... complicated
             case TrialType.OverrideInput:
-                player.Sham(1);
-                sham = true;
-
+                player.OverrideInput(1);
+                overrideInput = true;
                 break;
 
             case TrialType.AugSuccess:
                 //The assisted success movement feedback doesn't trigger until partway into the animation
-                player.AssistedSuccess(1);
-
+                player.AugmentedSuccess(1);
                 break;
 
             case TrialType.MitigateFail:
-                AssistedFailure();
-
+                MitigatedFailure();
                 break;
         }
         gameManager.PauseTrial();
@@ -188,7 +181,6 @@ public class GameController : MonoBehaviour
         {
             column = 3;
             won = true;
-            //gameManager.canEndGame = true;
         }
         hook.Move(new Vector3(columnPos[column], lanePos[lane]), false, 1);
     }
@@ -216,7 +208,7 @@ public class GameController : MonoBehaviour
         hook.Move(new Vector3(columnPos[column], lanePos[lane]), true, 0.8f);
     }
 
-    public void Sham()
+    public void OverrideInput()
     {
         lane--;
 
@@ -229,7 +221,7 @@ public class GameController : MonoBehaviour
         hook.Move(new Vector3(columnPos[column], lanePos[lane]), false, 1);
     }
 
-    public void AssistedSuccess()
+    public void AugmentedSuccess()
     {
         lane -= 2;
 
@@ -242,21 +234,21 @@ public class GameController : MonoBehaviour
         hook.Move(new Vector3(columnPos[column], lanePos[lane]), false, 0.5f);
     }
 
-    void AssistedFailure()
+    void MitigatedFailure()
     {
         currentFish.Struggle();
-        player.AssistedFailure();
+        player.MitigatedFailure();
     }
 
     public void FeedbackFinished()
     {
-        //Sham has extra feedback that plays after the movement feedback finishes
-        if (sham)
+        //OI has extra feedback that plays after the movement feedback finishes
+        if (overrideInput)
         {
-            player.Sham(3);
-            sham = false;
+            player.OverrideInput(3);
+            overrideInput = false;
         }
-        else if (!sham)
+        else
         {
             moving = false;
 
@@ -264,11 +256,11 @@ public class GameController : MonoBehaviour
 
             if (lane < 2)
             {
-                gameManager.assistSuccessPossible = false;
+                gameManager.augSuccessPossible = false;
             }
             else
             {
-                gameManager.assistSuccessPossible = true;
+                gameManager.augSuccessPossible = true;
             }
 
 
@@ -336,7 +328,7 @@ public class GameController : MonoBehaviour
 
         if (won)
         {
-            //ui.AddFish(fishSprites[sprite], winCounter);
+            ui.AddFish(fishSprites[sprite], winCounter);
 
             basin.Splash();
             won = false;
@@ -371,7 +363,7 @@ public class GameController : MonoBehaviour
         if (!gameManager.gameOver)
         {
 
-            int size = UnityEngine.Random.Range(1, 3);
+            int size = UnityEngine.Random.Range(0, 3);
 
             int leftToRight = UnityEngine.Random.Range(0, 2);
 

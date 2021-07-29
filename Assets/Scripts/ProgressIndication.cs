@@ -20,16 +20,9 @@ public class ProgressIndication : MonoBehaviour
     private float progressBarTime = 0f; // goes from 0 to 1?
 
 
-    // Start is called before the first frame update
     void Start()
     {
         positionPusher.sizeDelta = new Vector2(0f, positionPusher.sizeDelta.y);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     public void OnGameTimeUpdate(GameTimers gameTimers) {

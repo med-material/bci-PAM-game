@@ -21,8 +21,6 @@ public class FishBehaviour : MonoBehaviour
     public bool escaped = false;
     bool onHook;
 
-
-    // Start is called before the first frame update
     void Start()
     {
         gc = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
@@ -116,12 +114,6 @@ public class FishBehaviour : MonoBehaviour
         anim.speed = 1;
     }
 
-    public void Reveal(Sprite fishSprite)
-    {
-        anim.enabled = false;
-        gameObject.GetComponent<SpriteRenderer>().sprite = fishSprite;
-    }
-
     //When the fish is lost, mirror around the x-axis, then swim away
     public void Escape()
     {
@@ -138,7 +130,6 @@ public class FishBehaviour : MonoBehaviour
         else
         {
             StartSwimming(transform.position, new Vector3(exitPoint.x, transform.position.y), 2);
-            //gc.FishEscaped();
         }
     }
 

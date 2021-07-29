@@ -10,7 +10,6 @@ public class PlayerBehaviour : MonoBehaviour
 
     public GameController gameController;
 
-    // Start is called before the first frame update
     void Start()
     {
         audioSource = gameObject.GetComponent<AudioSource>();
@@ -24,7 +23,7 @@ public class PlayerBehaviour : MonoBehaviour
 
     public void NormalSuccess()
     {
-        anim.Play("ReelInSuccess");
+        anim.Play("SubtaskSuccess");
     }
 
     public void NormalFailure()
@@ -42,43 +41,44 @@ public class PlayerBehaviour : MonoBehaviour
         anim.Play("ReelOut");
     }
 
-    public void AssistedFailure()
+    public void MitigatedFailure()
     {
-        anim.Play("AssistedFailure");
+        anim.Play("MitigatedFailure");
     }
 
-    public void AssistedSuccess(int part)
+    public void AugmentedSuccess(int part)
     {
         if (part == 1)
         {
-            anim.Play("AssistedSuccess");
+            anim.Play("AugmentedSuccess");
             PlaySound(9);
         }
         else if (part == 2)
         {
-            gameController.AssistedSuccess();
+            gameController.AugmentedSuccess();
         }
     }
 
-    public void Sham(int part)
+    public void OverrideInput(int part)
     {
         if (part == 1)
         {
             PlaySound(4);
-            anim.Play("ShamOne");
+            anim.Play("OI1");
         }
         else if (part == 2)
         {
-            anim.Play("ShamTwo");
-            gameController.Sham();
+            anim.Play("OI2");
+            gameController.OverrideInput();
         }
         else if (part == 3)
         {
             PlaySound(4);
-            anim.Play("ShamThree");
+            anim.Play("OI3");
         }
     }
 
+    // Referenced in animation
     void StopFish()
     {
         GameObject.FindGameObjectWithTag("Fish").GetComponent<FishBehaviour>().StopStruggle();
@@ -96,6 +96,7 @@ public class PlayerBehaviour : MonoBehaviour
         PlaySound(1);
     }
 
+    // Referenced in animation
     void AnimationDone()
     {
         gameController.FeedbackFinished();

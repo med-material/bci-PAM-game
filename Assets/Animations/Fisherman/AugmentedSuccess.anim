@@ -6,7 +6,7 @@ AnimationClip:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: AssistedSuccess
+  m_Name: AugmentedSuccess
   serializedVersion: 6
   m_Legacy: 0
   m_Compressed: 0
@@ -471,7 +471,7 @@ AnimationClip:
     intParameter: 3
     messageOptions: 0
   - time: 2.4833333
-    functionName: AssistedSuccess
+    functionName: AugmentedSuccess
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
