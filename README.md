@@ -43,4 +43,5 @@ When the game ends (or OnApplicationQuit), the game saves two logs in the /docum
 *	Trial goal
 *	Fish events (caught/escaped)
 *	Arrowkey input
+
 For more information about the LoggingManager, see: https://github.com/med-material/LoggingManager.
