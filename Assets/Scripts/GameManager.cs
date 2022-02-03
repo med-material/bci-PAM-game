@@ -176,7 +176,7 @@ public class GameManager : MonoBehaviour
 
             if (condition == Condition.AugmentedSucces)
             {
-                accTrials = accTrials - PAMtrials;
+                //accTrials = accTrials - PAMtrials;
                 augSuccessTrials = PAMtrials;
             }
             else if (condition == Condition.MitigatedFailure)
