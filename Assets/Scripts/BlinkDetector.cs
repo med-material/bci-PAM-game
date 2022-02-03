@@ -49,9 +49,7 @@ public class BlinkDetector : MonoBehaviour
             // If eyes are OPEN
             //Debug.Log(TobiiAPI.GetGazePoint().IsRecent(0.1f));
             //Debug.Log("eyestate: " + Enum.GetName(typeof(EyeState), eyeState));
-
-            if (Input.GetKeyUp(KeyCode.Space)) // for debugging without eyetracker
-            //if (TobiiAPI.GetGazePoint().IsRecent(0.1f))
+            if (TobiiAPI.GetGazePoint().IsRecent(0.1f))
             {
                 if (eyeState == EyeState.EyesClosed || eyeState == EyeState.Unintialized)
                 {
@@ -66,9 +64,7 @@ public class BlinkDetector : MonoBehaviour
                     onBlink.Invoke(inputData);
                 }
                 duration = 0f;
-            }
-            else if (Input.GetKeyDown(KeyCode.Space)) // for debugging without eyetracker
-            //else
+            } else 
             {
                 if (eyeState == EyeState.EyesOpen || eyeState == EyeState.Unintialized)
                 {
