@@ -153,11 +153,26 @@ public class UrnModel : MonoBehaviour
 
     private void OverrideEntryInOrder(string entryName, string result) {
         string name;
+
         for (int i = index; i < designedOrder.Count; i++) {
             name = designedOrder[i];
-            if(entryName == "AugmentSuccess")
+
+            if(entryName == "AugSuccess")
             {
+
                 if(entryTypes[name].behavior == UrnEntryBehavior.Success)
+                {
+                    Debug.Log("Overwriting " + name + " with " + entryName + " at position " + i.ToString());
+                    designedOrder[i] = entryName;
+                    Debug.Log("Deferring success to later..");
+                    // If Augmented Success has overridden an AccInput, we need to also override a RejInput
+                    // to 'move' the AccInput.
+                    OverrideEntryInOrder(name, result);
+                    return;
+                }
+            } else if(entryName == "AccInput")
+            {
+                if(entryTypes[name].behavior == UrnEntryBehavior.Override)
                 {
                     Debug.Log("Overwriting " + name + " with " + entryName + " at position " + i.ToString());
                     designedOrder[i] = entryName;
