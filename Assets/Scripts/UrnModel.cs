@@ -165,9 +165,12 @@ public class UrnModel : MonoBehaviour
                     Debug.Log("Overwriting " + name + " with " + entryName + " at position " + i.ToString());
                     designedOrder[i] = entryName;
                     Debug.Log("Deferring success to later..");
-                    // If Augmented Success has overridden an AccInput, we need to also override a RejInput
-                    // to 'move' the AccInput.
-                    OverrideEntryInOrder(name, result);
+                    if (result == "RejInput") {
+                        // If Augmented Success has overridden an AccInput, we need to also override a RejInput
+                        // to 'move' the AccInput.
+                        // But if the Augmented Success was replaced by an AccInput, we should not override.
+                        OverrideEntryInOrder(name, result);
+                    }
                     return;
                 }
             } else if(entryName == "AccInput")

@@ -188,6 +188,9 @@ public class GameManager : MonoBehaviour
                 overrideInputTrials = PAMtrials;
             }
         }
+        Debug.Log("PAM: " + PAMtrials.ToString());
+        Debug.Log("accTrials: " + accTrials.ToString());
+        Debug.Log("trials: " + trials.ToString());
         rejTrials = trials - accTrials - PAMtrials;
 
 
@@ -434,6 +437,7 @@ public class GameManager : MonoBehaviour
 
     public void OnInputReceived(InputData inputData)
     {
+        Debug.Log("InputWindowState:" + System.Enum.GetName(typeof(InputWindowState), inputWindow));
         if (inputWindow == InputWindowState.Closed)
         {
             // ignore the input.
@@ -501,9 +505,17 @@ public class GameManager : MonoBehaviour
             }
             else if (trialGoal == TrialType.AugSuccess)
             {
-                if (augSuccessPossible && inputData.validity == InputValidity.Accepted)
+                if (inputData.validity == InputValidity.Accepted)
                 {
-                    trialResult = TrialType.AugSuccess;
+                    if (augSuccessPossible) {
+                        trialResult = TrialType.AugSuccess;
+                    } else {
+                        // augSuccessPossible is true only if there are more than 2 lanes.
+                        // we should default to a normal success and defer the augSuccess
+                        // to later.
+                        trialResult = TrialType.AccInput;
+                    }
+                    
                     CloseInputWindow();
                 }
                 else

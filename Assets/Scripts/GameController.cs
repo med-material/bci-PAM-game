@@ -234,6 +234,26 @@ public class GameController : MonoBehaviour
         hook.Move(new Vector3(columnPos[column], lanePos[lane]), false, 0.5f);
     }
 
+    // public void AugmentedSuccess()
+    // {
+    //     int laneReduction = 2;
+    //     // if we cant reduce the lane by 2, just reduce by the remaining amount.
+    //     if (lane < 2)
+    //     {
+    //         laneReduction = lane;
+    //     }
+
+    //     lane -= laneReduction;
+
+    //     if (lane == 0)
+    //     {
+    //         column = 3;
+    //         won = true;
+    //     }
+
+    //     hook.Move(new Vector3(columnPos[column], lanePos[lane]), false, 0.5f);
+    // }
+
     void MitigatedFailure()
     {
         currentFish.Struggle();
@@ -364,6 +384,7 @@ public class GameController : MonoBehaviour
         {
 
             int size = UnityEngine.Random.Range(0, 3);
+            int newPos = UnityEngine.Random.Range(1, 3);
 
             int leftToRight = UnityEngine.Random.Range(0, 2);
 
@@ -376,8 +397,8 @@ public class GameController : MonoBehaviour
             {
                 spawnPoint.x = lake.transform.localScale.x - 3;
             }
-
-            spawnPoint.y = lanePos[size + 1] - fish[size].transform.localScale.y / 3;
+            
+            spawnPoint.y = lanePos[newPos + 1] - fish[size].transform.localScale.y / 3;
             spawnPoint.z = hook.transform.position.z - 0.1f;
 
             currentFish = Instantiate(fish[size], spawnPoint, Quaternion.identity).GetComponent<FishBehaviour>();
