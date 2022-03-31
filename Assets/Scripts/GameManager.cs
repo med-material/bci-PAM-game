@@ -164,7 +164,8 @@ public class GameManager : MonoBehaviour
 
     private void SetupMechanisms()
     {
-        accTrials = (int)(trials * positiveRate);
+        Debug.Log("accTrials: " + positiveRate.ToString());
+        accTrials = (int) Mathf.Round(trials * positiveRate);
         if (condition == Condition.Control)
         {
             PAMRate = 0;
