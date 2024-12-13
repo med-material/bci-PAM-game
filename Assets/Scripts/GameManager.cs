@@ -534,15 +534,15 @@ public class GameManager : MonoBehaviour
 
                 Debug.Log("random number: " + rnd);
 
-                if (rnd < 3)
-                {
-                    if (condition == Condition.OverrideInput && mechanisms["OverrideInput"].trialsLeft != 0)
-                    {
-                        trialResult = TrialType.OverrideInput;
-                    }
-                    else if (condition == Condition.MitigatedFailure && mechanisms["MitigateFail"].trialsLeft != 0)
-                        trialResult = TrialType.MitigateFail;
-                }
+                //if (rnd < 3)
+                //{
+                //    if (condition == Condition.OverrideInput && mechanisms["OverrideInput"].trialsLeft != 0)
+                //    {
+                //        trialResult = TrialType.OverrideInput;
+                //    }
+                //    else if (condition == Condition.MitigatedFailure && mechanisms["MitigateFail"].trialsLeft != 0)
+                //        trialResult = TrialType.MitigateFail;
+                //}
             }
             else if (trialGoal == TrialType.MitigateFail)
             {
